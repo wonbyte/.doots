@@ -1,28 +1,37 @@
--- Define the path to lazy.nvim
+-- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-
--- Clone lazy.nvim if it is not already installed
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
-  vim.fn.system({
-    "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath
-  })
+  local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+  if vim.v.shell_error ~= 0 then
+    vim.api.nvim_echo({
+      { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+      { out, "WarningMsg" },
+      { "\nPress any key to exit..." },
+    }, true, {})
+    vim.fn.getchar()
+    os.exit(1)
+  end
 end
-
--- Prepend lazy.nvim to the runtime path
 vim.opt.rtp:prepend(lazypath)
 
 -- Set <Space> as the leader key (must be set before plugins are loaded)
 vim.g.mapleader = " "
-
--- Look for plugins in the 'lua/plugins' directory
-require("lazy").setup("plugins")
+vim.g.maplocalleader = " "
 
 -- Load Custom Settings
 require("settings")
 
--- Load Key Mappings
-require("keymappings")
-
 -- Load Autocommands
 require("aucommands")
+
+-- Setup lazy.nvim
+require("lazy").setup({
+  spec = {
+    -- import your plugins
+    { import = "plugins" },
+  },
+})
+
+-- Load Key Mappings (needs "plugins")
+require("keymappings")
