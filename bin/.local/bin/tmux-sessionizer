@@ -1,25 +1,87 @@
 #!/usr/bin/env bash
 
-if [[ $# -eq 1 ]]; then
-    selected=$1
-else
-    selected=$(find ~/src -mindepth 1 -maxdepth 1 -type d | fzf)
-fi
+# Ensures the script stops on errors, undefined variables, or failed commands in
+# pipelines.
+set -euo pipefail
 
-if [[ -z $selected ]]; then
-    exit 0
-fi
+check_dependencies() {
+    # Check if tmux is installed
+    command -v tmux >/dev/null || {
+        echo "Error: tmux is not installed. Please install tmux and try again." >&2
+        exit 1
+    }
 
-selected_name=$(basename "$selected" | tr . _)
-tmux_running=$(pgrep tmux)
+    # Check if fzf is installed (optional)
+    if ! command -v fzf >/dev/null; then
+        echo "Warning: fzf is not installed. Directory selection will not be interactive." >&2
+    fi
+}
 
-if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
-    tmux new-session -s $selected_name -c $selected
-    exit 0
-fi
+check_src_directory() {
+    # Check if ~/src is a valid directory
+    if [[ ! -d ~/src ]]; then
+        echo "Error: ~/src directory does not exist. Please create it or specify a directory manually." >&2
+        exit 1
+    fi
+}
 
-if ! tmux has-session -t=$selected_name 2> /dev/null; then
-    tmux new-session -ds $selected_name -c $selected
-fi
+select_directory() {
+    # If a directory is passed as an argument, use it
+    if [[ $# -eq 1 ]]; then
+        echo "$1"
+    # Otherwise, use `fzf` for interactive selection if available
+    elif command -v fzf >/dev/null; then
+        find ~/src -mindepth 1 -maxdepth 1 -type d -print | fzf || true
+    else
+        # If no argument is given and `fzf` is unavailable, exit with an error
+        echo "Error: No directory provided and fzf is not available for interactive selection." >&2
+        exit 1
+    fi
+}
 
-tmux switch-client -t $selected_name
+get_tmux_session_name() {
+    # Get the base name of the directory and replace periods with underscores
+    local dir="$1"
+    basename "$dir" | tr . _
+}
+
+is_tmux_running() {
+    # Use `pgrep` to check for a running tmux process
+    pgrep tmux >/dev/null 2>&1
+}
+
+main() {
+    # Check that necessary commands are installed
+    check_dependencies
+
+    # Ensure the `~/src` directory exists
+    check_src_directory
+
+    # Get the selected directory (either from argument or `fzf`)
+    local selected
+    selected=$(select_directory "$@")
+
+    # Exit if no directory is selected (e.g., user cancels `fzf`)
+    if [[ -z "$selected" ]]; then
+        exit 0
+    fi
+
+    # Sanitize the directory name to use as a tmux session name
+    local selected_name
+    selected_name=$(get_tmux_session_name "$selected")
+
+    # If tmux is not running, start a new tmux session directly
+    if [[ -z ${TMUX:-} ]] && ! is_tmux_running; then
+        exec tmux new-session -s "$selected_name" -c "$selected"
+    fi
+
+    # If the session does not already exist, create it in detached mode
+    if ! tmux has-session -t="$selected_name" 2>/dev/null; then
+        tmux new-session -ds "$selected_name" -c "$selected"
+    fi
+
+    # Attach or switch to the newly created tmux session
+    tmux switch-client -t "$selected_name"
+}
+
+main "$@"
