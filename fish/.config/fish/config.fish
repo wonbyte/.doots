@@ -1,5 +1,5 @@
 # Exports
-set -Ux DOTFILES $HOME/.dots-linux
+set -Ux DOTFILES $HOME/.doots
 set -Ux GOROOT /usr/local/go
 set -Ux GOPATH $HOME/.go
 set -Ux LANG en_US.UTF-8
