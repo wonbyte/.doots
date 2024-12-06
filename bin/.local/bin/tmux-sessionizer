@@ -80,8 +80,12 @@ main() {
         tmux new-session -ds "$selected_name" -c "$selected"
     fi
 
-    # Attach or switch to the newly created tmux session
-    tmux switch-client -t "$selected_name"
+    # If we are inside tmux, switch to the session. Otherwise, attach to it.
+    if [[ -n ${TMUX:-} ]]; then
+        tmux switch-client -t "$selected_name"
+    else
+        tmux attach -t "$selected_name"
+    fi
 }
 
 main "$@"
