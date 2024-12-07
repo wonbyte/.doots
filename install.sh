@@ -14,7 +14,7 @@ if [ -z "$STOW_FOLDERS" ]; then
 fi
 
 # Convert the comma-separated list into an array by replacing commas with spaces
-read -r -a folders <<< "${STOW_FOLDERS//,/ }"
+IFS=',' read -r -a folders <<< "$STOW_FOLDERS"
 
 # Validate that we have at least one folder after splitting
 if [ ${#folders[@]} -eq 0 ]; then
@@ -29,18 +29,27 @@ if [ ! -d "${HOME}/.doots" ]; then
 fi
 
 # Move into the .doots directory
-pushd "${HOME}/.doots" >/dev/null 2>&1
+pushd "${HOME}/.doots" >/dev/null || exit 1
 
 # Unstow and then restow each folder
 for folder in "${folders[@]}"; do
+    # Check if the folder exists in the .doots directory
+    if [ ! -d "$folder" ]; then
+        echo "Warning: Folder '$folder' does not exist in ${HOME}/.doots. Skipping."
+        continue
+    fi
+
     # Unstow (don't fail if nothing was previously stowed)
-    stow -D "$folder" || true
+    stow -D "$folder" 2>/dev/null || true
 
     # Stow the current folder
-    stow "$folder"
+    if ! stow "$folder"; then
+        echo "Error: Failed to stow folder '$folder'."
+        exit 1
+    fi
 done
 
 # Return to the original directory
-popd >/dev/null 2>&1 || true
+popd >/dev/null || exit 1
 
 echo "Stow operations completed successfully."
