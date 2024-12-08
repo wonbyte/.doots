@@ -26,7 +26,7 @@ require("settings")
 require("aucommands")
 
 -- Setup lazy.nvim
-require("lazy").setup('plugins')
+require("lazy").setup("plugins")
 
 -- Load Key Mappings (needs "plugins")
 require("keymappings")
