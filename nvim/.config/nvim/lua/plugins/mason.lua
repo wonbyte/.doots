@@ -114,23 +114,25 @@ return {
       -- LspAttach AutoCommand for Buffer-Local Keybindings
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
-        callback = function(ev)
-          -- Enable completion with <C-x><C-o>
-          vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
-
+        callback = function(args)
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+          if client.supports_method("textDocument/formatting") then
+            -- Format the current buffer on save
+            vim.api.nvim_create_autocmd("BufWritePre", {
+              buffer = args.buf,
+              callback = function()
+                vim.lsp.buf.format({ bufnr = args.buf, id = client.id })
+              end,
+            })
+          end
           -- Buffer-Local Mappings
-          local opts = { buffer = ev.buf }
+          local opts = { buffer = args.buf }
           vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
           vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
           vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
-          vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, opts)
-          vim.keymap.set(
-            { "n", "v" },
-            "<space>ca",
-            vim.lsp.buf.code_action,
-            opts
-          )
-          vim.keymap.set("n", "<space>f", function()
+          vim.keymap.set("n", "rn", vim.lsp.buf.rename, opts)
+          vim.keymap.set({ "n", "v" }, "ca", vim.lsp.buf.code_action, opts)
+          vim.keymap.set("n", "<leader>f", function()
             vim.lsp.buf.format({ async = true })
           end, opts)
         end,
