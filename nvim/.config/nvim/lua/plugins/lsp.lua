@@ -7,7 +7,7 @@ return {
       diagnostics = {
         float = {
           border = "rounded",
-          source = "true",
+          source = true,
         },
         virtual_text = false,
         signs = false,

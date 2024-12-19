@@ -16,7 +16,20 @@ return {
     dependencies = "rafamadriz/friendly-snippets",
     version = "v0.*",
     opts = {
-      keymap = { preset = "default" },
+      keymap = {
+        ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
+        ["<C-e>"] = { "hide" },
+        ["<CR>"] = { "select_and_accept" },
+
+        ["<S-Tab>"] = { "select_prev", "fallback" },
+        ["<Tab>"] = { "select_next", "fallback" },
+
+        ["<C-b>"] = { "scroll_documentation_up", "fallback" },
+        ["<C-f>"] = { "scroll_documentation_down", "fallback" },
+
+        ["<C-p>"] = { "snippet_backward", "fallback" },
+        ["<C-n>"] = { "snippet_forward", "fallback" },
+      },
 
       appearance = {
         use_nvim_cmp_as_default = true,
