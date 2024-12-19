@@ -1,7 +1,6 @@
 return {
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "saghen/blink.cmp" },
     opts = {
       -- Diagnostics Configuration
       diagnostics = {
@@ -76,9 +75,8 @@ return {
 
       -- Set up each server
       for server, server_opts in pairs(opts.servers) do
-        local capabilities = require("blink.cmp").get_lsp_capabilities(
-          vim.lsp.protocol.make_client_capabilities()
-        )
+        local capabilities = vim.lsp.protocol.make_client_capabilities()
+
         lspconfig[server].setup(vim.tbl_deep_extend("force", {
           capabilities = capabilities,
           handlers = handlers,
