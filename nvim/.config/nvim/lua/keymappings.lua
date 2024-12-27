@@ -4,28 +4,48 @@ P = function(v)
   return v
 end
 
+-- Function to toggle the Quickfix window
+local function toggle_qf()
+  -- Check if a Quickfix window is currently open
+  local qf_open = false
+  for _, win in ipairs(vim.fn.getwininfo()) do
+    if win.quickfix == 1 then
+      qf_open = true
+      P(qf_open)
+      break
+    end
+  end
+
+  -- If the Quickfix window is open, close it
+  if qf_open then
+    vim.cmd("cclose")
+    return
+  end
+
+  -- Use vim.schedule to execute diagnostics fetching asynchronously
+  vim.schedule(function()
+    -- Get all current diagnostics
+    local diagnostics = vim.diagnostic.get()
+
+    -- If diagnostics exist, populate the Quickfix list and open the window
+    if not vim.tbl_isempty(diagnostics) then
+      -- Populate Quickfix with diagnostics
+      vim.diagnostic.setqflist()
+      -- Open the Quickfix window
+      vim.cmd("copen")
+    else
+      -- Notify the user if there are no diagnostics to show
+      vim.notify("No diagnostics to show in Quickfix", vim.log.levels.INFO)
+    end
+  end)
+end
+
 -- Helper function for binding keymaps
 local function bind(op, outer_opts)
   outer_opts = outer_opts or { noremap = true, silent = true }
   return function(lhs, rhs, opts)
     opts = vim.tbl_extend("force", outer_opts, opts or {})
     vim.keymap.set(op, lhs, rhs, opts)
-  end
-end
-
--- Function to toggle the Quickfix window
-local function toggle_qf()
-  -- Check if a Quickfix window is open
-  local qf_open = vim.iter(vim.fn.getwininfo()):find(function(win)
-    return win.quickfix == 1
-  end) ~= nil
-
-  if qf_open then
-    vim.cmd("cclose")
-  else
-    -- Populate the Quickfix list with diagnostics
-    vim.diagnostic.setqflist()
-    vim.cmd("copen")
   end
 end
 

@@ -56,24 +56,10 @@ return {
         find_files = {
           -- Show hidden files
           hidden = false,
-          -- Enable preview for `find_files`
           previewer = true,
         },
         live_grep = {
-          -- Enable preview for `live_grep`
           previewer = true,
-        },
-      },
-      extensions = {
-        fzf = {
-          -- Enable fuzzy matching
-          fuzzy = true,
-          -- Override built-in sorter
-          override_generic_sorter = true,
-          -- Override file sorter
-          override_file_sorter = true,
-          -- Case-sensitive if input contains uppercase
-          case_mode = "smart_case",
         },
       },
     },
@@ -84,10 +70,7 @@ return {
       local make_entry = require("telescope.make_entry")
       local conf = require("telescope.config").values
 
-      local live_multigrep = function(opts)
-        opts = opts or {}
-        opts.cwd = opts.cwd or vim.uv.cwd()
-
+      local live_multigrep = function()
         local finder = finders.new_async_job({
           command_generator = function(prompt)
             if not prompt or prompt == "" then
@@ -120,7 +103,7 @@ return {
             })
           end,
           entry_maker = make_entry.gen_from_vimgrep(opts),
-          cwd = opts.cwd,
+          cwd = vim.uv.cwd(),
         })
 
         pickers
