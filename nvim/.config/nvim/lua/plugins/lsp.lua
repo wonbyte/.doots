@@ -1,7 +1,59 @@
 return {
   {
     "neovim/nvim-lspconfig",
-    dependencies = "saghen/blink.cmp",
+    dependencies = {
+      {
+        "williamboman/mason.nvim",
+        dependencies = {
+          "williamboman/mason-lspconfig.nvim",
+        },
+        opts = {
+          ui = {
+            icons = {
+              package_installed = "✓",
+              package_pending = "➜",
+              package_uninstalled = "✗",
+            },
+          },
+        },
+      },
+      {
+        "folke/lazydev.nvim",
+        ft = "lua", -- only load on lua files
+        opts = {
+          library = {
+            -- See the configuration section for more details
+            -- Load luvit types when the `vim.uv` word is found
+            { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+          },
+        },
+      },
+      {
+        "saghen/blink.cmp",
+        dependencies = "rafamadriz/friendly-snippets",
+        version = "v0.*",
+        opts = {
+          keymap = { preset = "default" },
+          appearance = {
+            use_nvim_cmp_as_default = true,
+            nerd_font_variant = "mono",
+          },
+          sources = {
+            -- add lazydev to your completion providers
+            default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+            providers = {
+              lazydev = {
+                name = "LazyDev",
+                module = "lazydev.integrations.blink",
+                -- make lazydev completions top priority (see `:h blink.cmp`)
+                score_offset = 100,
+              },
+            },
+          },
+          signature = { enabled = true },
+        },
+      },
+    },
     opts = {
       -- Diagnostics Configuration
       diagnostics = {
@@ -31,18 +83,21 @@ return {
           settings = {
             gopls = {
               analyses = { unusedparams = true },
+              hints = {
+                assignVariableTypes = true,
+                compositeLiteralFields = true,
+                compositeLiteralTypes = true,
+                constantValues = true,
+                functionTypeParameters = true,
+                parameterNames = true,
+                rangeVariableTypes = true,
+              },
             },
           },
         },
         lua_ls = {
           settings = {
-            Lua = {
-              runtime = { version = "LuaJIT" },
-              workspace = {
-                checkThirdParty = false,
-                library = { vim.env.VIMRUNTIME },
-              },
-            },
+            Lua = {},
           },
         },
         rust_analyzer = {

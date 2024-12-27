@@ -1,3 +1,5 @@
+local keymap = vim.keymap.set
+
 -- Global helper for debugging
 P = function(v)
   print(vim.inspect(v))
@@ -18,7 +20,7 @@ local function toggle_qf()
 
   -- If the Quickfix window is open, close it
   if qf_open then
-    vim.cmd("cclose")
+            vim.cmd("cclose")
     return
   end
 
@@ -40,51 +42,39 @@ local function toggle_qf()
   end)
 end
 
--- Helper function for binding keymaps
-local function bind(op, outer_opts)
-  outer_opts = outer_opts or { noremap = true, silent = true }
-  return function(lhs, rhs, opts)
-    opts = vim.tbl_extend("force", outer_opts, opts or {})
-    vim.keymap.set(op, lhs, rhs, opts)
-  end
-end
-
--- Keybinding helper functions
-local nnoremap = bind("n")
-local vnoremap = bind("v")
-local inoremap = bind("i")
-local cnoremap = bind("c")
-
 -- Clear search highlighting
-nnoremap("<C-h>", "<cmd>noh<CR>")
+keymap("n", "<C-h>", "<cmd>noh<CR>")
 -- Toggle display of hidden characters
-nnoremap("<leader>,", ":set invlist<CR>")
+
+keymap("n", "<leader>,", ":set invlist<CR>")
+
 -- Open file explorer
-nnoremap("<leader>o", ":Ex<CR>")
+keymap("n", "<leader>o", ":Ex<CR>")
+
 -- Disable F1
-nnoremap("<F1>", "<Nop>")
-inoremap("<F1>", "<Nop>")
+keymap("n", "<F1>", "<Nop>")
+keymap("i", "<F1>", "<Nop>")
 
 -- "Very magic" regexes by default
-nnoremap("?", "?\\v")
-nnoremap("/", "/\\v")
-cnoremap("%s/", "%sm/")
+keymap("n", "?", "?\\v")
+keymap("n", "/", "/\\v")
+keymap("c", "%s/", "%sm/")
 
 -- Keep selection while indenting
-vnoremap("<", "<gv")
-vnoremap(">", ">gv")
+keymap("v", "<", "<gv")
+keymap("v", ">", ">gv")
 
 -- Quickfix
-nnoremap("<leader>q", toggle_qf)
+keymap("n", "<leader>q", toggle_qf)
 
 -- Source File
-nnoremap("<leader>s", ":source <CR>")
+keymap("n", "<leader>s", ":source <CR>")
 
 -- Test Files
-nnoremap("<leader>t", "<Plug>PlenaryTestFile")
+keymap("n", "<leader>t", "<Plug>PlenaryTestFile")
 
 -- Toggle Inlay Hints
-nnoremap("<leader>h", function()
+keymap("n", "<leader>h", function()
   local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
   vim.lsp.inlay_hint.enable(not enabled)
   if enabled then
