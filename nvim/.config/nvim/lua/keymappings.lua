@@ -20,7 +20,7 @@ local function toggle_qf()
 
   -- If the Quickfix window is open, close it
   if qf_open then
-            vim.cmd("cclose")
+    vim.cmd("cclose")
     return
   end
 

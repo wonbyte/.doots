@@ -34,14 +34,3 @@ autocmd("TextYankPost", {
     })
   end,
 })
-
--- Update Quickfix list on file save
-local qf_group = augroup("QuickfixUpdate", { clear = true })
-autocmd("BufWritePost", {
-  group = qf_group,
-  pattern = "*",
-  desc = "Update Quickfix list on save",
-  callback = function()
-    vim.diagnostic.setqflist({ open = false })
-  end,
-})
