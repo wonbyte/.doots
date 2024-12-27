@@ -1,5 +1,3 @@
-local keymap = vim.keymap.set
-
 -- Global helper for debugging
 P = function(v)
   print(vim.inspect(v))
@@ -41,6 +39,8 @@ local function toggle_qf()
     end
   end)
 end
+
+local keymap = vim.keymap.set
 
 -- Clear search highlighting
 keymap("n", "<C-h>", "<cmd>noh<CR>")
