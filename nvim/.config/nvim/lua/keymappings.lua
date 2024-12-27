@@ -57,17 +57,8 @@ vnoremap(">", ">gv")
 -- Quickfix
 nnoremap("<leader>q", toggle_qf)
 
--- Telescope Integrations
+-- Dotfiles
 nnoremap("<leader>rc", require("util.builtins").search_dotfiles)
-nnoremap("<leader>gb", require("telescope.builtin").git_branches)
-nnoremap("<leader>gc", require("telescope.builtin").git_commits)
-nnoremap("<leader>gs", require("telescope.builtin").git_status)
-nnoremap("<leader>fb", require("telescope.builtin").current_buffer_fuzzy_find)
-nnoremap("<leader>ff", require("telescope.builtin").find_files)
-nnoremap("<leader>fg", require("telescope.builtin").live_grep)
-nnoremap("<leader>cb", require("telescope.builtin").buffers)
-nnoremap("<leader>gw", require("telescope.builtin").grep_string)
-nnoremap("<leader>tj", ":Telescope help_tags<CR>")
 
 -- Source File
 nnoremap("<leader>s", ":source <CR>")
