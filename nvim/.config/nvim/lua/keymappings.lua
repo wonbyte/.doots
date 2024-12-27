@@ -77,9 +77,6 @@ vnoremap(">", ">gv")
 -- Quickfix
 nnoremap("<leader>q", toggle_qf)
 
--- Dotfiles
-nnoremap("<leader>rc", require("util.builtins").search_dotfiles)
-
 -- Source File
 nnoremap("<leader>s", ":source <CR>")
 

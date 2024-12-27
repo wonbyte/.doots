@@ -73,6 +73,55 @@ return {
       local make_entry = require("telescope.make_entry")
       local sorters = require("telescope.sorters")
       local conf = require("telescope.config").values
+      local builtin = require("telescope.builtin")
+
+      -- Search dotfiles in the DOTFILES directory or fallback to Neovim config
+      local search_dotfiles = function(opts)
+        opts = opts or {}
+
+        -- Determine your dotfiles directory
+        local dotfiles_dir = vim.env.DOTFILES or vim.fn.expand("~/.config/nvim")
+
+        -- Create an async finder
+        local finder = finders.new_async_job({
+          command_generator = function(prompt)
+            -- Use ripgrep (`rg`) in "list files" mode
+            -- * Include hidden files (`--hidden`)
+            -- * Follow symlinks (`--follow`)
+            -- * Use `--no-ignore-vcs` if you want to ignore .gitignore
+            local rg_args = {
+              "rg",
+              "--files",
+              "--hidden",
+              "--follow",
+            }
+
+            -- If the user typed something, interpret it as a glob for filenames
+            if prompt and prompt ~= "" then
+              table.insert(rg_args, "-g")
+              table.insert(rg_args, "*" .. prompt .. "*")
+            end
+
+            return rg_args
+          end,
+
+          -- We'll run `rg` inside the dotfiles directory
+          cwd = dotfiles_dir,
+
+          -- Convert each line of output to a Telescope entry
+          entry_maker = make_entry.gen_from_file(opts),
+        })
+
+        -- Build the Telescope picker
+        pickers
+          .new(opts, {
+            prompt_title = "< Dotfiles >",
+            finder = finder,
+            previewer = conf.file_previewer(opts),
+            sorter = sorters.get_fuzzy_file(),
+          })
+          :find()
+      end
 
       -- Custom multi-arg live grep
       local live_multigrep = function()
@@ -130,6 +179,7 @@ return {
       local keymap = vim.keymap.set
       local builtin = require("telescope.builtin")
 
+      keymap("n", "<leader>rc", search_dotfiles)
       keymap("n", "<leader>gb", builtin.git_branches)
       keymap("n", "<leader>gc", builtin.git_commits)
       keymap("n", "<leader>gs", builtin.git_status)
