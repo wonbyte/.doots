@@ -158,16 +158,18 @@ return {
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
         callback = function(args)
           -- Buffer-Local Mappings
-          local opts = { buffer = args.buf }
-          vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-          vim.keymap.set("n", "gr", builtin.lsp_references, opts)
-          vim.keymap.set("n", "gD", vim.lsp.buf.neclaration, opts)
-          vim.keymap.set("n", "gT", vim.lsp.buf.type_definition, opts)
-          vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-          vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
-          vim.keymap.set("n", "rn", vim.lsp.buf.rename, opts)
-          vim.keymap.set({ "n", "v" }, "ca", vim.lsp.buf.code_action, opts)
-          vim.keymap.set("n", "<space>wd", builtin.lsp_document_symbols, opts)
+          local bufnr = { buffer = args.buf }
+          local builtin = require("telescope.builtin")
+          vim.opt_local.omnifunc = "v:lua.vim.lsp.omnifunc"
+          vim.keymap.set("n", "gd", vim.lsp.buf.definition, bufnr)
+          vim.keymap.set("n", "gr", builtin.lsp_references, bufnr)
+          vim.keymap.set("n", "gD", vim.lsp.buf.declaration, bufnr)
+          vim.keymap.set("n", "gT", vim.lsp.buf.type_definition, bufnr)
+          vim.keymap.set("n", "K", vim.lsp.buf.hover, bufnr)
+          vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, bufnr)
+          vim.keymap.set("n", "rn", vim.lsp.buf.rename, bufnr)
+          vim.keymap.set({ "n", "v" }, "ca", vim.lsp.buf.code_action, bufnr)
+          vim.keymap.set("n", "<space>wd", builtin.lsp_document_symbols, bufnr)
         end,
       })
     end,
