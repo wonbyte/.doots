@@ -160,13 +160,14 @@ return {
           -- Buffer-Local Mappings
           local opts = { buffer = args.buf }
           vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+          vim.keymap.set("n", "gr", builtin.lsp_references, opts)
+          vim.keymap.set("n", "gD", vim.lsp.buf.neclaration, opts)
+          vim.keymap.set("n", "gT", vim.lsp.buf.type_definition, opts)
           vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
           vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
           vim.keymap.set("n", "rn", vim.lsp.buf.rename, opts)
           vim.keymap.set({ "n", "v" }, "ca", vim.lsp.buf.code_action, opts)
-          vim.keymap.set("n", "<leader>f", function()
-            vim.lsp.buf.format({ async = true })
-          end, opts)
+          vim.keymap.set("n", "<space>wd", builtin.lsp_document_symbols, opts)
         end,
       })
     end,
