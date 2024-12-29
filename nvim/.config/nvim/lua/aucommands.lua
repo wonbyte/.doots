@@ -1,7 +1,7 @@
--- Remove trailing whitespace on save
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
+-- Remove trailing whitespace on save
 local remove_whitespace_group = augroup("RemoveWhitespace", { clear = true })
 autocmd("BufWritePre", {
   group = remove_whitespace_group,

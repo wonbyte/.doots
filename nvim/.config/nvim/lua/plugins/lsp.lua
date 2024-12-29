@@ -170,7 +170,7 @@ return {
           vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, bufnr)
           vim.keymap.set("n", "rn", vim.lsp.buf.rename, bufnr)
           vim.keymap.set({ "n", "v" }, "ca", vim.lsp.buf.code_action, bufnr)
-          vim.keymap.set("n", "<space>wd", builtin.lsp_document_symbols, bufnr)
+          vim.keymap.set("n", "<leader>wd", builtin.lsp_document_symbols, bufnr)
         end,
       })
     end,
