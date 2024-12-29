@@ -160,6 +160,7 @@ return {
           -- Buffer-Local Mappings
           local bufnr = { buffer = args.buf }
           local builtin = require("telescope.builtin")
+
           vim.opt_local.omnifunc = "v:lua.vim.lsp.omnifunc"
           vim.keymap.set("n", "gd", vim.lsp.buf.definition, bufnr)
           vim.keymap.set("n", "gr", builtin.lsp_references, bufnr)
