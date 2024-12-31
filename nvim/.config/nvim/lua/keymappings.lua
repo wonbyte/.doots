@@ -83,7 +83,7 @@ keymap("n", "<leader>q", toggle_qf)
 keymap("n", "<leader>s", ":source <CR>")
 
 -- Test Files
-keymap("n", "<leader>t", "<Plug>PlenaryTestFile")
+keymap("n", "<leader>t", "<cmd>PlenaryBustedFile %<CR>")
 
 -- Toggle Inlay Hints
 keymap("n", "<leader>h", function()
