@@ -97,7 +97,12 @@ return {
         },
         lua_ls = {
           settings = {
-            Lua = {},
+            Lua = {
+              completion = {
+                callSnippet = "Disable",
+                keywordSnippet = "Disable",
+              },
+            },
           },
         },
         rust_analyzer = {
@@ -105,6 +110,11 @@ return {
             ["rust-analyzer"] = {
               cargo = {
                 allFeatures = true,
+              },
+              completion = {
+                capable = {
+                  snippets = "add_parenthesis",
+                },
               },
             },
           },
