@@ -23,9 +23,8 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- Set <Space> as the leader key (must be set before plugins are loaded)
-local g = vim.g
-g.mapleader = " "
-g.maplocalleader = "\\"
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
 
 require("settings")
 require("aucommands")
