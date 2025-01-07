@@ -2,7 +2,6 @@
 set -Ux DOTFILES $HOME/.doots
 set -Ux GOROOT /usr/local/go
 set -Ux GOPATH $HOME/.go
-set -Ux GPG_TTY (tty)
 set -Ux LANG en_US.UTF-8
 set -Ux LC_ALL en_US.UTF-8
 set -Ux NVIM_BIN /usr/local/nvim/bin
