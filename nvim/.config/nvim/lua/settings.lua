@@ -66,7 +66,7 @@ vim.o.shiftround = true -- Round indent to the nearest shiftwidth
 
 -- Enable the display of hidden characters
 vim.o.list = true
-vim.o.listchars = "tab:^ ,nbsp:¬,extends:»,precedes:«,trail:•"
+vim.o.listchars = "tab:^,nbsp:¬,extends:»,precedes:«,trail:•"
 
 -- Ensure files are saved with UTF-8 encoding
 vim.o.fileencoding = "utf-8"
