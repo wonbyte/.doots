@@ -34,3 +34,13 @@ autocmd("TextYankPost", {
     })
   end,
 })
+
+-- Auto-refresh QF on saving *if* the QF window is already open
+local qf_group = augroup("ToggleQF", { clear = true })
+autocmd("BufWritePost", {
+  group = qf_group,
+  desc = "Toggle quick fix",
+  callback = function()
+    vim.diagnostic.setqflist({ open = false })
+  end,
+})

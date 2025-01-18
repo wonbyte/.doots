@@ -4,53 +4,20 @@ P = function(v)
   return v
 end
 
--- Helper to check if QF is open
-local function is_qf_open()
-  for _, win in ipairs(vim.fn.getwininfo()) do
-    if win.quickfix == 1 then
-      return true
-    end
-  end
-  return false
-end
-
 -- Toggle the Quickfix window (close if already open, open if closed)
 local function toggle_qf()
-  if is_qf_open() then
+  -- Check if a Quickfix window is open
+  local qf_open = vim.iter(vim.fn.getwininfo()):find(function(win)
+    return win.quickfix == 1
+  end) ~= nil
+  if qf_open then
     vim.cmd("cclose")
-    return
+  else
+    -- Populate the Quickfix list with diagnostics
+    vim.diagnostic.setqflist()
+    vim.cmd("copen")
   end
-
-  vim.schedule(function()
-    local bufnr = vim.api.nvim_get_current_buf()
-    local diagnostics = vim.diagnostic.get(bufnr)
-    if not vim.tbl_isempty(diagnostics) then
-      vim.diagnostic.setqflist()
-      vim.cmd("copen")
-    else
-      vim.notify("No diagnostics to show in Quickfix", vim.log.levels.INFO)
-    end
-  end)
 end
-
--- Auto-refresh QF on saving *if* the QF window is already open
-vim.api.nvim_create_autocmd("BufWritePost", {
-  pattern = "*",
-  callback = function()
-    -- Only update if QF is already open
-    if is_qf_open() then
-      vim.schedule(function()
-        -- Update existing QF diagnostics without opening it if closed
-        vim.diagnostic.setqflist({ open = false })
-
-        -- Auto-close when empty
-        if vim.tbl_isempty(vim.diagnostic.get()) then
-          vim.cmd("cclose")
-        end
-      end)
-    end
-  end,
-})
 
 local keymap = vim.keymap.set
 
