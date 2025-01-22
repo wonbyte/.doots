@@ -36,11 +36,19 @@ autocmd("TextYankPost", {
 })
 
 -- Auto-refresh QF on saving *if* the QF window is already open
-local qf_group = augroup("ToggleQF", { clear = true })
-autocmd("BufWritePost", {
-  group = qf_group,
-  desc = "Toggle quick fix",
+vim.api.nvim_create_autocmd("BufWritePost", {
+  pattern = "*",
   callback = function()
-    vim.diagnostic.setqflist({ open = false })
+    -- Only update if QF is already open
+    if is_qf_open() then
+      vim.schedule(function()
+        -- Update existing QF diagnostics without opening it if closed
+        vim.diagnostic.setqflist({ open = false })
+        -- Auto-close when empty
+        if vim.tbl_isempty(vim.diagnostic.get()) then
+          vim.cmd("cclose")
+        end
+      end)
+    end
   end,
 })
