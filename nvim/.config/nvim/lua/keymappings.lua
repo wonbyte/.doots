@@ -1,35 +1,7 @@
 -- Global helper for debugging
 P = function(v)
-  print(vim.inspect(v))
-  return v
-end
-
--- Helper to check if QF is open
-local function is_qf_open()
-  for _, win in ipairs(vim.fn.getwininfo()) do
-    if win.quickfix == 1 then
-      return true
-    end
-  end
-  return false
-end
-
--- Toggle the Quickfix window (close if already open, open if closed)
-local function toggle_qf()
-  if is_qf_open() then
-    vim.cmd("cclose")
-    return
-  end
-  vim.schedule(function()
-    local bufnr = vim.api.nvim_get_current_buf()
-    local diagnostics = vim.diagnostic.get(bufnr)
-    if not vim.tbl_isempty(diagnostics) then
-      vim.diagnostic.setqflist()
-      vim.cmd("copen")
-    else
-      vim.notify("No diagnostics to show in Quickfix", vim.log.levels.INFO)
-    end
-  end)
+    print(vim.inspect(v))
+    return v
 end
 
 local keymap = vim.keymap.set
@@ -56,9 +28,6 @@ keymap("c", "%s/", "%sm/")
 keymap("v", "<", "<gv")
 keymap("v", ">", ">gv")
 
--- Quickfix
-keymap("n", "<leader>q", toggle_qf)
-
 -- Source File
 keymap("n", "<leader>s", ":source <CR>")
 
@@ -67,11 +36,11 @@ keymap("n", "<leader>t", "<cmd>PlenaryBustedFile %<CR>")
 
 -- Toggle Inlay Hints
 keymap("n", "<leader>h", function()
-  local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
-  vim.lsp.inlay_hint.enable(not enabled)
-  if enabled then
-    vim.notify("Inlay hints disabled", vim.log.levels.INFO)
-  else
-    vim.notify("Inlay hints enabled", vim.log.levels.INFO)
-  end
+    local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
+    vim.lsp.inlay_hint.enable(not enabled)
+    if enabled then
+        vim.notify("Inlay hints disabled", vim.log.levels.INFO)
+    else
+        vim.notify("Inlay hints enabled", vim.log.levels.INFO)
+    end
 end)
