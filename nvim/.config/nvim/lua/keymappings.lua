@@ -1,7 +1,7 @@
 -- Global helper for debugging
 P = function(v)
-    print(vim.inspect(v))
-    return v
+  print(vim.inspect(v))
+  return v
 end
 
 local keymap = vim.keymap.set
@@ -36,11 +36,11 @@ keymap("n", "<leader>t", "<cmd>PlenaryBustedFile %<CR>")
 
 -- Toggle Inlay Hints
 keymap("n", "<leader>h", function()
-    local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
-    vim.lsp.inlay_hint.enable(not enabled)
-    if enabled then
-        vim.notify("Inlay hints disabled", vim.log.levels.INFO)
-    else
-        vim.notify("Inlay hints enabled", vim.log.levels.INFO)
-    end
+  local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
+  vim.lsp.inlay_hint.enable(not enabled)
+  if enabled then
+    vim.notify("Inlay hints disabled", vim.log.levels.INFO)
+  else
+    vim.notify("Inlay hints enabled", vim.log.levels.INFO)
+  end
 end)
