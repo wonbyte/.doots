@@ -123,6 +123,9 @@ return {
                         },
                     },
                 },
+                zls = {
+                    settings = {}
+                },
             },
         },
         config = function(_, opts)
