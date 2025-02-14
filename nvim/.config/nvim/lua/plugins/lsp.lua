@@ -31,7 +31,9 @@ return {
       {
         "saghen/blink.cmp",
         dependencies = "rafamadriz/friendly-snippets",
-        version = "v0.*",
+        version = "*",
+        ---@module 'blink.cmp'
+        ---@type blink.cmp.Config
         opts = {
           keymap = { preset = "default" },
           appearance = {
@@ -56,6 +58,7 @@ return {
           },
           signature = { window = { border = "single" } },
         },
+        opts_extend = { "sources.default" },
       },
     },
     opts = {
