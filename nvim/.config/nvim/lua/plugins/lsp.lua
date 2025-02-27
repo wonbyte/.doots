@@ -56,6 +56,7 @@ return {
             menu = { border = "single" },
             documentation = { window = { border = "single" } },
           },
+          fuzzy = { implementation = "prefer_rust_with_warning" },
           signature = { window = { border = "single" } },
         },
         opts_extend = { "sources.default" },
