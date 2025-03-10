@@ -5,6 +5,3 @@ fish_variables
 
 # files
 envs.sh
-
-# zig symlink
-zig
