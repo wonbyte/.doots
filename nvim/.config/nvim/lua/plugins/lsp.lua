@@ -128,7 +128,10 @@ return {
           },
         },
         zls = {
-          settings = {},
+          settings = {
+            -- Neovim already provides basic syntax highlighting
+            semantic_tokens = "partial",
+          },
         },
       },
     },
