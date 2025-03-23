@@ -137,51 +137,50 @@ return {
     },
     config = function(_, opts)
       local lspconfig = require("lspconfig")
-      local capabilities = require("blink.cmp").get_lsp_capabilities()
 
       -- Apply diagnostics configuration
       vim.diagnostic.config(opts.diagnostics)
 
+      -- Define a function to wrap handlers with borders
+      local function with_border(handler)
+        return vim.lsp.with(handler, { border = opts.border })
+      end
+
       -- Set up float handlers
       local handlers = {
-        ["textDocument/hover"] = vim.lsp.with(
-          vim.lsp.handlers.hover,
-          { border = opts.border }
-        ),
-        ["textDocument/signatureHelp"] = vim.lsp.with(
-          vim.lsp.handlers.signature_help,
-          { border = opts.border }
+        ["textDocument/hover"] = with_border(vim.lsp.handlers.hover),
+        ["textDocument/signatureHelp"] = with_border(
+          vim.lsp.handlers.signature_help
         ),
       }
 
-      -- Set up each server
-      for server, config in pairs(opts.servers) do
-        config.capabilities =
-          require("blink.cmp").get_lsp_capabilities(config.capabilities)
-        config.handlers = handlers
-
-        lspconfig[server].setup(config)
+      -- Set up each LSP server
+      for server, server_config in pairs(opts.servers) do
+        lspconfig[server].setup(vim.tbl_deep_extend("force", server_config, {
+          capabilities = require("blink.cmp").get_lsp_capabilities(
+            server_config.capabilities
+          ),
+          handlers = handlers,
+        }))
       end
 
       -- LspAttach AutoCommand for Buffer-Local Keybindings
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
         callback = function(args)
-          local bufnr = { buffer = args.buf }
-          local builtin = require("telescope.builtin")
+          local bufnr = args.buf
+          local map = vim.keymap.set
 
-          vim.keymap.set("n", "gd", vim.lsp.buf.definition, bufnr)
-          vim.keymap.set("n", "gr", builtin.lsp_references, bufnr)
-          vim.keymap.set("n", "gD", vim.lsp.buf.declaration, bufnr)
-          vim.keymap.set("n", "gT", vim.lsp.buf.type_definition, bufnr)
-          vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, bufnr)
-          vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, bufnr)
-          vim.keymap.set(
-            { "n", "v" },
-            "<leader>ca",
-            vim.lsp.buf.code_action,
-            bufnr
-          )
+          local keymaps = {
+            { "n", "gd", vim.lsp.buf.definition },
+            { "n", "<C-k>", vim.lsp.buf.signature_help },
+            { "n", "<leader>rn", vim.lsp.buf.rename },
+            { { "n", "v" }, "<leader>ca", vim.lsp.buf.code_action },
+          }
+
+          for _, keymap in ipairs(keymaps) do
+            map(keymap[1], keymap[2], keymap[3], { buffer = bufnr })
+          end
         end,
       })
     end,
