@@ -19,11 +19,9 @@ return {
       },
       {
         "folke/lazydev.nvim",
-        ft = "lua", -- only load on lua files
+        ft = "lua", -- only load on Lua files
         opts = {
           library = {
-            -- See the configuration section for more details
-            -- Load luvit types when the `vim.uv` word is found
             { path = "${3rd}/luv/library", words = { "vim%.uv" } },
           },
         },
@@ -41,14 +39,12 @@ return {
             nerd_font_variant = "mono",
           },
           sources = {
-            -- add lazydev to your completion providers
             default = { "lazydev", "lsp", "path", "snippets", "buffer" },
             providers = {
               lazydev = {
                 name = "LazyDev",
                 module = "lazydev.integrations.blink",
-                -- make lazydev completions top priority (see `:h blink.cmp`)
-                score_offset = 100,
+                score_offset = 100, -- Make LazyDev completions top priority
               },
             },
           },
@@ -129,7 +125,6 @@ return {
         },
         zls = {
           settings = {
-            -- Neovim already provides basic syntax highlighting
             semantic_tokens = "partial",
           },
         },
@@ -141,45 +136,50 @@ return {
       -- Apply diagnostics configuration
       vim.diagnostic.config(opts.diagnostics)
 
-      -- Define a function to wrap handlers with borders
-      local function with_border(handler)
+      -- Function to wrap handlers with borders
+      local function add_border(handler)
         return vim.lsp.with(handler, { border = opts.border })
       end
 
-      -- Set up float handlers
+      -- Set up floating handlers
       local handlers = {
-        ["textDocument/hover"] = with_border(vim.lsp.handlers.hover),
-        ["textDocument/signatureHelp"] = with_border(
+        ["textDocument/hover"] = add_border(vim.lsp.handlers.hover),
+        ["textDocument/signatureHelp"] = add_border(
           vim.lsp.handlers.signature_help
         ),
       }
 
-      -- Set up each LSP server
+      -- Setup LSP servers
       for server, server_config in pairs(opts.servers) do
-        lspconfig[server].setup(vim.tbl_deep_extend("force", server_config, {
-          capabilities = require("blink.cmp").get_lsp_capabilities(
-            server_config.capabilities
-          ),
-          handlers = handlers,
-        }))
+        lspconfig[server].setup(
+          vim.tbl_deep_extend("force", vim.deepcopy(server_config), {
+            capabilities = require("blink.cmp").get_lsp_capabilities(
+              server_config.capabilities
+            ),
+            handlers = handlers,
+          })
+        )
       end
 
-      -- LspAttach AutoCommand for Buffer-Local Keybindings
+      -- AutoCommand: Buffer-local keybindings on LspAttach
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
         callback = function(args)
           local bufnr = args.buf
           local map = vim.keymap.set
-
           local keymaps = {
-            { "n", "gd", vim.lsp.buf.definition },
-            { "n", "<C-k>", vim.lsp.buf.signature_help },
-            { "n", "<leader>rn", vim.lsp.buf.rename },
-            { { "n", "v" }, "<leader>ca", vim.lsp.buf.code_action },
+            { mode = "n", key = "gd", action = vim.lsp.buf.definition },
+            { mode = "n", key = "<C-k>", action = vim.lsp.buf.signature_help },
+            { mode = "n", key = "<leader>rn", action = vim.lsp.buf.rename },
+            {
+              mode = { "n", "v" },
+              key = "<leader>ca",
+              action = vim.lsp.buf.code_action,
+            },
           }
 
-          for _, keymap in ipairs(keymaps) do
-            map(keymap[1], keymap[2], keymap[3], { buffer = bufnr })
+          for _, km in ipairs(keymaps) do
+            map(km.mode, km.key, km.action, { buffer = bufnr })
           end
         end,
       })
