@@ -154,9 +154,8 @@ return {
       }
 
       -- Set up each server
+      local capabilities = require("blink.cmp").get_lsp_capabilities()
       for server, server_opts in pairs(opts.servers) do
-        local capabilities = require("blink.cmp").get_lsp_capabilities()
-
         lspconfig[server].setup(vim.tbl_deep_extend("force", {
           capabilities = capabilities,
           handlers = handlers,
