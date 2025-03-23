@@ -155,27 +155,25 @@ return {
       }
 
       -- Set up each server
-      for server, server_opts in pairs(opts.servers) do
-        lspconfig[server].setup(vim.tbl_deep_extend("force", {
-          capabilities = capabilities,
-          handlers = handlers,
-        }, server_opts))
+      for server, config in pairs(opts.servers) do
+        config.capabilities =
+          require("blink.cmp").get_lsp_capabilities(config.capabilities)
+        config.handlers = handlers
+
+        lspconfig[server].setup(config)
       end
 
       -- LspAttach AutoCommand for Buffer-Local Keybindings
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
         callback = function(args)
-          -- Buffer-Local Mappings
           local bufnr = { buffer = args.buf }
           local builtin = require("telescope.builtin")
 
-          vim.opt_local.omnifunc = "v:lua.vim.lsp.omnifunc"
           vim.keymap.set("n", "gd", vim.lsp.buf.definition, bufnr)
           vim.keymap.set("n", "gr", builtin.lsp_references, bufnr)
           vim.keymap.set("n", "gD", vim.lsp.buf.declaration, bufnr)
           vim.keymap.set("n", "gT", vim.lsp.buf.type_definition, bufnr)
-          vim.keymap.set("n", "K", vim.lsp.buf.hover, bufnr)
           vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, bufnr)
           vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, bufnr)
           vim.keymap.set(
@@ -184,7 +182,6 @@ return {
             vim.lsp.buf.code_action,
             bufnr
           )
-          vim.keymap.set("n", "<leader>wd", builtin.lsp_document_symbols, bufnr)
         end,
       })
     end,
