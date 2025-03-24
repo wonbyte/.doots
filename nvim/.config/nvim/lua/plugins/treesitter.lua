@@ -17,6 +17,7 @@ return {
         "json",
         "lua",
         "markdown",
+        "odin",
         "rust",
         "scss",
         "sql",

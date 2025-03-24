@@ -109,6 +109,9 @@ return {
             },
           },
         },
+        ols = {
+          settings = {},
+        },
         rust_analyzer = {
           settings = {
             ["rust-analyzer"] = {
