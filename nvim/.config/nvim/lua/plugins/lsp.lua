@@ -61,10 +61,7 @@ return {
     opts = {
       -- Diagnostics Configuration
       diagnostics = {
-        float = {
-          border = "rounded",
-          source = true,
-        },
+        float = { border = "rounded", source = true },
         virtual_text = false,
         signs = true,
         underline = false,
@@ -109,27 +106,17 @@ return {
             },
           },
         },
-        ols = {
-          settings = {},
-        },
+        ols = { settings = {} },
         rust_analyzer = {
           settings = {
             ["rust-analyzer"] = {
-              cargo = {
-                allFeatures = true,
-              },
-              completion = {
-                capable = {
-                  snippets = "add_parenthesis",
-                },
-              },
+              cargo = { allFeatures = true },
+              completion = { capable = { snippets = "add_parenthesis" } },
             },
           },
         },
         zls = {
-          settings = {
-            semantic_tokens = "partial",
-          },
+          settings = { semantic_tokens = "partial" },
         },
       },
     },
@@ -139,12 +126,12 @@ return {
       -- Apply diagnostics configuration
       vim.diagnostic.config(opts.diagnostics)
 
-      -- Function to wrap handlers with borders
+      -- Function to add borders to LSP handlers
       local function add_border(handler)
         return vim.lsp.with(handler, { border = opts.border })
       end
 
-      -- Set up floating handlers
+      -- Default handlers with borders
       local handlers = {
         ["textDocument/hover"] = add_border(vim.lsp.handlers.hover),
         ["textDocument/signatureHelp"] = add_border(
@@ -152,39 +139,40 @@ return {
         ),
       }
 
-      -- Setup LSP servers
+      -- Set up LSP servers
       for server, server_config in pairs(opts.servers) do
-        lspconfig[server].setup(
-          vim.tbl_deep_extend("force", vim.deepcopy(server_config), {
-            capabilities = require("blink.cmp").get_lsp_capabilities(
-              server_config.capabilities
-            ),
-            handlers = handlers,
-          })
-        )
+        lspconfig[server].setup(vim.tbl_deep_extend("force", server_config, {
+          capabilities = require("blink.cmp").get_lsp_capabilities(
+            server_config.capabilities
+          ),
+          handlers = vim.tbl_deep_extend(
+            "force",
+            server_config.handlers or {},
+            handlers
+          ),
+        }))
+      end
+
+      -- Function to set keymaps for LSP
+      local function on_lsp_attach(args)
+        local bufnr = args.buf
+        local map = vim.keymap.set
+        local keymaps = {
+          { "n", "gd", vim.lsp.buf.definition },
+          { "n", "<C-k>", vim.lsp.buf.signature_help },
+          { "n", "<leader>rn", vim.lsp.buf.rename },
+          { { "n", "v" }, "<leader>ca", vim.lsp.buf.code_action },
+        }
+
+        for _, km in ipairs(keymaps) do
+          map(km[1], km[2], km[3], { buffer = bufnr })
+        end
       end
 
       -- AutoCommand: Buffer-local keybindings on LspAttach
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
-        callback = function(args)
-          local bufnr = args.buf
-          local map = vim.keymap.set
-          local keymaps = {
-            { mode = "n", key = "gd", action = vim.lsp.buf.definition },
-            { mode = "n", key = "<C-k>", action = vim.lsp.buf.signature_help },
-            { mode = "n", key = "<leader>rn", action = vim.lsp.buf.rename },
-            {
-              mode = { "n", "v" },
-              key = "<leader>ca",
-              action = vim.lsp.buf.code_action,
-            },
-          }
-
-          for _, km in ipairs(keymaps) do
-            map(km.mode, km.key, km.action, { buffer = bufnr })
-          end
-        end,
+        callback = on_lsp_attach,
       })
     end,
   },
