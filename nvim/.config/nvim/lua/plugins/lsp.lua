@@ -4,9 +4,7 @@ return {
     dependencies = {
       {
         "williamboman/mason.nvim",
-        dependencies = {
-          "williamboman/mason-lspconfig.nvim",
-        },
+        dependencies = { "williamboman/mason-lspconfig.nvim" },
         opts = {
           ui = {
             icons = {
@@ -19,7 +17,7 @@ return {
       },
       {
         "folke/lazydev.nvim",
-        ft = "lua", -- only load on Lua files
+        ft = "lua", -- Load only for Lua files
         opts = {
           library = {
             { path = "${3rd}/luv/library", words = { "vim%.uv" } },
@@ -30,8 +28,6 @@ return {
         "saghen/blink.cmp",
         dependencies = "rafamadriz/friendly-snippets",
         version = "*",
-        ---@module 'blink.cmp'
-        ---@type blink.cmp.Config
         opts = {
           keymap = { preset = "default" },
           appearance = {
@@ -44,7 +40,7 @@ return {
               lazydev = {
                 name = "LazyDev",
                 module = "lazydev.integrations.blink",
-                score_offset = 100, -- Make LazyDev completions top priority
+                score_offset = 100, -- Prioritize LazyDev completions
               },
             },
           },
@@ -69,16 +65,7 @@ return {
         severity_sort = true,
       },
       -- Float Window Borders
-      border = {
-        { "╭", "FloatBorder" },
-        { "─", "FloatBorder" },
-        { "╮", "FloatBorder" },
-        { "│", "FloatBorder" },
-        { "╯", "FloatBorder" },
-        { "─", "FloatBorder" },
-        { "╰", "FloatBorder" },
-        { "│", "FloatBorder" },
-      },
+      border = "rounded",
       servers = {
         gopls = {
           settings = {
@@ -115,13 +102,12 @@ return {
             },
           },
         },
-        zls = {
-          settings = { semantic_tokens = "partial" },
-        },
+        zls = { settings = { semantic_tokens = "partial" } },
       },
     },
     config = function(_, opts)
       local lspconfig = require("lspconfig")
+      local cmp_lsp = require("blink.cmp").get_lsp_capabilities
 
       -- Apply diagnostics configuration
       vim.diagnostic.config(opts.diagnostics)
@@ -142,9 +128,7 @@ return {
       -- Set up LSP servers
       for server, server_config in pairs(opts.servers) do
         lspconfig[server].setup(vim.tbl_deep_extend("force", server_config, {
-          capabilities = require("blink.cmp").get_lsp_capabilities(
-            server_config.capabilities
-          ),
+          capabilities = cmp_lsp(server_config.capabilities),
           handlers = vim.tbl_deep_extend(
             "force",
             server_config.handlers or {},
@@ -153,20 +137,24 @@ return {
         }))
       end
 
-      -- Function to set keymaps for LSP
+      -- Set LSP keymaps
       local function on_lsp_attach(args)
         local bufnr = args.buf
-        local map = vim.keymap.set
         local keymaps = {
-          { "n", "gd", vim.lsp.buf.definition },
-          { "n", "<C-k>", vim.lsp.buf.signature_help },
-          { "n", "<leader>rn", vim.lsp.buf.rename },
-          { { "n", "v" }, "<leader>ca", vim.lsp.buf.code_action },
+          { "n", "gd", vim.lsp.buf.definition, "[LSP] Go to definition" },
+          { "n", "<C-k>", vim.lsp.buf.signature_help, "[LSP] Signature help" },
+          { "n", "<leader>rn", vim.lsp.buf.rename, "[LSP] Rename symbol" },
+          {
+            { "n", "v" },
+            "<leader>ca",
+            vim.lsp.buf.code_action,
+            "[LSP] Code actions",
+          },
         }
 
-        for _, km in ipairs(keymaps) do
-          map(km[1], km[2], km[3], { buffer = bufnr })
-        end
+        vim.tbl_map(function(km)
+          vim.keymap.set(km[1], km[2], km[3], { buffer = bufnr, desc = km[4] })
+        end, keymaps)
       end
 
       -- AutoCommand: Buffer-local keybindings on LspAttach
