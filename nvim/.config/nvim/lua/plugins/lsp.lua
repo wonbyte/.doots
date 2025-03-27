@@ -112,28 +112,19 @@ return {
       -- Apply diagnostics configuration
       vim.diagnostic.config(opts.diagnostics)
 
-      -- Function to add borders to LSP handlers
-      local function add_border(handler)
-        return vim.lsp.with(handler, { border = opts.border })
-      end
-
-      -- Default handlers with borders
-      local handlers = {
-        ["textDocument/hover"] = add_border(vim.lsp.handlers.hover),
-        ["textDocument/signatureHelp"] = add_border(
-          vim.lsp.handlers.signature_help
-        ),
-      }
+      -- Override default floating preview
+      vim.lsp.util.open_floating_preview = (function(orig)
+        return function(contents, syntax, override_opts, ...)
+          override_opts = override_opts or {}
+          override_opts.border = override_opts.border or opts.border
+          return orig(contents, syntax, override_opts, ...)
+        end
+      end)(vim.lsp.util.open_floating_preview)
 
       -- Set up LSP servers
       for server, server_config in pairs(opts.servers) do
         lspconfig[server].setup(vim.tbl_deep_extend("force", server_config, {
           capabilities = cmp_lsp(server_config.capabilities),
-          handlers = vim.tbl_deep_extend(
-            "force",
-            server_config.handlers or {},
-            handlers
-          ),
         }))
       end
 
