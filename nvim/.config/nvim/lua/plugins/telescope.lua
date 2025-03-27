@@ -10,7 +10,6 @@ return {
       local actions = require("telescope.actions")
       local previewers = require("telescope.previewers")
       local sorters = require("telescope.sorters")
-      local conf = require("telescope.config").values
 
       return {
         defaults = {
@@ -174,7 +173,6 @@ return {
 
       -- Key mappings
       local keymap = vim.keymap.set
-      local builtin = require("telescope.builtin")
 
       keymap("n", "<leader>rc", search_dotfiles)
       keymap("n", "<leader>gb", builtin.git_branches)
