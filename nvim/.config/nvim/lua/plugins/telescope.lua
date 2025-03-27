@@ -74,44 +74,33 @@ return {
       local conf = require("telescope.config").values
       local builtin = require("telescope.builtin")
 
-      -- Search dotfiles in the DOTFILES directory or fallback to Neovim config
-      local search_dotfiles = function(opts)
+      -- Search dotfiles using Telescope and ripgrep
+      local search_dotfiles = function()
         opts = opts or {}
 
-        -- Determine your dotfiles directory
         local dotfiles_dir = vim.env.DOTFILES or vim.fn.expand("~/.config/nvim")
 
-        -- Create an async finder
         local finder = finders.new_async_job({
           command_generator = function(prompt)
-            -- Use ripgrep (`rg`) in "list files" mode
-            -- * Include hidden files (`--hidden`)
-            -- * Follow symlinks (`--follow`)
-            -- * Use `--no-ignore-vcs` if you want to ignore .gitignore
-            local rg_args = {
+            local args = {
               "rg",
               "--files",
               "--hidden",
               "--follow",
             }
 
-            -- If the user typed something, interpret it as a glob for filenames
+            -- Match files based on user input (as a glob)
             if prompt and prompt ~= "" then
-              table.insert(rg_args, "-g")
-              table.insert(rg_args, "*" .. prompt .. "*")
+              table.insert(args, "-g")
+              table.insert(args, "*" .. prompt .. "*")
             end
 
-            return rg_args
+            return args
           end,
-
-          -- We'll run `rg` inside the dotfiles directory
           cwd = dotfiles_dir,
-
-          -- Convert each line of output to a Telescope entry
           entry_maker = make_entry.gen_from_file(opts),
         })
 
-        -- Build the Telescope picker
         pickers
           .new(opts, {
             prompt_title = "< Dotfiles >",
@@ -122,11 +111,12 @@ return {
           :find()
       end
 
-      -- Custom multi-arg live grep
+      -- Multi-field live grep with pattern and glob
       local live_multigrep = function()
+        opts = opts or {}
+
         local finder = finders.new_async_job({
           command_generator = function(prompt)
-            -- Exit early if prompt is empty or nil
             if not prompt or prompt == "" then
               return nil
             end
@@ -134,17 +124,15 @@ return {
             local pieces = vim.split(prompt, "  ")
             local args = { "rg" }
 
-            if pieces[1] then
-              table.insert(args, "-e")
-              table.insert(args, pieces[1])
+            if pieces[1] and pieces[1] ~= "" then
+              vim.list_extend(args, { "-e", pieces[1] })
             end
 
-            if pieces[2] then
-              table.insert(args, "-g")
-              table.insert(args, pieces[2])
+            if pieces[2] and pieces[2] ~= "" then
+              vim.list_extend(args, { "-g", pieces[2] })
             end
 
-            return vim.list_extend(vim.deepcopy(args), {
+            return vim.list_extend(args, {
               "--color=never",
               "--no-heading",
               "--with-filename",
@@ -153,8 +141,8 @@ return {
               "--smart-case",
             })
           end,
-          entry_maker = make_entry.gen_from_vimgrep(opts),
           cwd = vim.uv.cwd(),
+          entry_maker = make_entry.gen_from_vimgrep(opts),
         })
 
         pickers

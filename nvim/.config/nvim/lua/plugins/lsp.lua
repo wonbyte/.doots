@@ -17,7 +17,7 @@ return {
       },
       {
         "folke/lazydev.nvim",
-        ft = "lua", -- Load only for Lua files
+        ft = "lua",
         opts = {
           library = {
             { path = "${3rd}/luv/library", words = { "vim%.uv" } },
@@ -55,7 +55,6 @@ return {
       },
     },
     opts = {
-      -- Diagnostics Configuration
       diagnostics = {
         float = { border = "rounded", source = true },
         virtual_text = false,
@@ -64,7 +63,6 @@ return {
         update_in_insert = false,
         severity_sort = true,
       },
-      -- Float Window Borders
       border = "rounded",
       servers = {
         gopls = {
