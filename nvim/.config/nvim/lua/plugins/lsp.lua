@@ -113,13 +113,13 @@ return {
       vim.diagnostic.config(opts.diagnostics)
 
       -- Override default floating preview
-      vim.lsp.util.open_floating_preview = (function(orig)
-        return function(contents, syntax, override_opts, ...)
-          override_opts = override_opts or {}
-          override_opts.border = override_opts.border or opts.border
-          return orig(contents, syntax, override_opts, ...)
-        end
-      end)(vim.lsp.util.open_floating_preview)
+      local orig = vim.lsp.util.open_floating_preview
+      ---@diagnostic disable-next-line
+      vim.lsp.util.open_floating_preview = function(contents, syntax, o, ...)
+        o = o or {}
+        o.border = opts.border
+        return orig(contents, syntax, o, ...)
+      end
 
       -- Set up LSP servers
       for server, server_config in pairs(opts.servers) do
