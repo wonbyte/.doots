@@ -65,6 +65,18 @@ return {
       },
       border = "rounded",
       servers = {
+        clangd = {
+          settings = {
+            clangd = {
+              offsetEncoding = { "utf-8", "utf-16" },
+              textDocument = {
+                completion = {
+                  editsNearCursor = true,
+                },
+              },
+            },
+          },
+        },
         gopls = {
           settings = {
             gopls = {
