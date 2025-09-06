@@ -78,6 +78,11 @@ return {
           },
         },
         gopls = {
+          capabilities = {
+            workspace = {
+              didChangeWatchedFiles = { dynamicRegistration = true },
+            },
+          },
           settings = {
             gopls = {
               analyses = { unusedparams = true },
