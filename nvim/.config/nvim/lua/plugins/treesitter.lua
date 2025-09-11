@@ -17,6 +17,7 @@ return {
         "lua",
         "markdown",
         "odin",
+        "proto",
         "rust",
         "scss",
         "sql",
