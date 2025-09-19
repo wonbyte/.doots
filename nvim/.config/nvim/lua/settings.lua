@@ -46,7 +46,7 @@ vim.o.diffopt = vim.o.diffopt .. ",iwhite"
 vim.o.signcolumn = "yes"
 
 -- Column guide at 80 characters
-vim.o.colorcolumn = "80"
+vim.o.colorcolumn = "120"
 
 -- Use system clipboard for all operations
 vim.o.clipboard = "unnamedplus"
