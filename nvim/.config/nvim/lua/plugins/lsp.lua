@@ -121,7 +121,6 @@ return {
       },
     },
     config = function(_, opts)
-      local lspconfig = require("lspconfig")
       local cmp_lsp = require("blink.cmp").get_lsp_capabilities
 
       -- Apply diagnostics configuration
@@ -138,9 +137,12 @@ return {
 
       -- Set up LSP servers
       for server, server_config in pairs(opts.servers) do
-        lspconfig[server].setup(vim.tbl_deep_extend("force", server_config, {
-          capabilities = cmp_lsp(server_config.capabilities),
-        }))
+        vim.lsp.config(
+          server,
+          vim.tbl_deep_extend("force", server_config, {
+            capabilities = cmp_lsp(server_config.capabilities),
+          })
+        )
       end
 
       -- Set LSP keymaps
