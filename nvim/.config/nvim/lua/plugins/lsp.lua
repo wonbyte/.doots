@@ -54,94 +54,107 @@ return {
         opts_extend = { "sources.default" },
       },
     },
-    opts = {
-      diagnostics = {
+    config = function()
+      local cmp_lsp = require("blink.cmp").get_lsp_capabilities
+
+      -- Apply diagnostics configuration
+      vim.diagnostic.config({
         float = { border = "rounded", source = true },
         virtual_text = false,
         signs = true,
         underline = false,
         update_in_insert = false,
         severity_sort = true,
-      },
-      border = "rounded",
-      servers = {
-        clangd = {
-          settings = {
-            clangd = {
-              offsetEncoding = { "utf-8", "utf-16" },
-              textDocument = {
-                completion = {
-                  editsNearCursor = true,
-                },
-              },
-            },
-          },
-        },
-        gopls = {
-          capabilities = {
-            workspace = {
-              didChangeWatchedFiles = { dynamicRegistration = true },
-            },
-          },
-          settings = {
-            gopls = {
-              analyses = { unusedparams = true },
-              hints = {
-                assignVariableTypes = true,
-                compositeLiteralFields = true,
-                compositeLiteralTypes = true,
-                constantValues = true,
-                functionTypeParameters = true,
-                parameterNames = true,
-                rangeVariableTypes = true,
-              },
-            },
-          },
-        },
-        lua_ls = {
-          settings = {
-            Lua = {
+      })
+
+      -- Configure LSP servers using the new vim.lsp.config API
+      vim.lsp.config.clangd = {
+        cmd = { "clangd" },
+        filetypes = { "c", "cpp", "objc", "objcpp" },
+        capabilities = cmp_lsp(),
+        settings = {
+          clangd = {
+            offsetEncoding = { "utf-8", "utf-16" },
+            textDocument = {
               completion = {
-                callSnippet = "Disable",
-                keywordSnippet = "Disable",
+                editsNearCursor = true,
               },
             },
           },
         },
-        ols = { settings = {} },
-        rust_analyzer = {
-          settings = {
-            ["rust-analyzer"] = {
-              cargo = { allFeatures = true },
-              completion = { capable = { snippets = "add_parenthesis" } },
+      }
+
+      vim.lsp.config.gopls = {
+        cmd = { "gopls" },
+        filetypes = { "go", "gomod", "gowork", "gotmpl" },
+        capabilities = vim.tbl_deep_extend("force", cmp_lsp(), {
+          workspace = {
+            didChangeWatchedFiles = { dynamicRegistration = true },
+          },
+        }),
+        settings = {
+          gopls = {
+            analyses = { unusedparams = true },
+            hints = {
+              assignVariableTypes = true,
+              compositeLiteralFields = true,
+              compositeLiteralTypes = true,
+              constantValues = true,
+              functionTypeParameters = true,
+              parameterNames = true,
+              rangeVariableTypes = true,
             },
           },
         },
-        zls = { settings = { semantic_tokens = "partial" } },
-      },
-    },
-    config = function(_, opts)
-      local lspconfig = require("lspconfig")
-      local cmp_lsp = require("blink.cmp").get_lsp_capabilities
+      }
 
-      -- Apply diagnostics configuration
-      vim.diagnostic.config(opts.diagnostics)
+      vim.lsp.config.lua_ls = {
+        cmd = { "lua-language-server" },
+        filetypes = { "lua" },
+        capabilities = cmp_lsp(),
+        settings = {
+          Lua = {
+            completion = {
+              callSnippet = "Disable",
+              keywordSnippet = "Disable",
+            },
+          },
+        },
+      }
 
-      -- Override default floating preview
-      local orig = vim.lsp.util.open_floating_preview
-      ---@diagnostic disable-next-line
-      vim.lsp.util.open_floating_preview = function(contents, syntax, o, ...)
-        o = o or {}
-        o.border = opts.border
-        return orig(contents, syntax, o, ...)
-      end
+      vim.lsp.config.ols = {
+        cmd = { "ols" },
+        filetypes = { "odin" },
+        capabilities = cmp_lsp(),
+        settings = {},
+      }
 
-      -- Set up LSP servers
-      for server, server_config in pairs(opts.servers) do
-        lspconfig[server].setup(vim.tbl_deep_extend("force", server_config, {
-          capabilities = cmp_lsp(server_config.capabilities),
-        }))
-      end
+      vim.lsp.config.rust_analyzer = {
+        cmd = { "rust-analyzer" },
+        filetypes = { "rust" },
+        capabilities = cmp_lsp(),
+        settings = {
+          ["rust-analyzer"] = {
+            cargo = { allFeatures = true },
+            completion = { capable = { snippets = "add_parenthesis" } },
+          },
+        },
+      }
+
+      vim.lsp.config.zls = {
+        cmd = { "zls" },
+        filetypes = { "zig", "zir" },
+        capabilities = cmp_lsp(),
+        settings = { semantic_tokens = "partial" },
+      }
+
+      -- Enable all configured language servers
+      vim.lsp.enable("clangd")
+      vim.lsp.enable("gopls")
+      vim.lsp.enable("lua_ls")
+      vim.lsp.enable("ols")
+      vim.lsp.enable("rust_analyzer")
+      vim.lsp.enable("zls")
 
       -- Set LSP keymaps
       local function on_lsp_attach(args)
@@ -150,17 +163,18 @@ return {
           { "n", "gd", vim.lsp.buf.definition, "[LSP] Go to definition" },
           { "n", "<C-k>", vim.lsp.buf.signature_help, "[LSP] Signature help" },
           { "n", "<leader>rn", vim.lsp.buf.rename, "[LSP] Rename symbol" },
-          {
-            { "n", "v" },
-            "<leader>ca",
-            vim.lsp.buf.code_action,
-            "[LSP] Code actions",
-          },
+          { "n", "<leader>ca", vim.lsp.buf.code_action, "[LSP] Code actions" },
+          { "v", "<leader>ca", vim.lsp.buf.code_action, "[LSP] Code actions" },
         }
 
-        vim.tbl_map(function(km)
-          vim.keymap.set(km[1], km[2], km[3], { buffer = bufnr, desc = km[4] })
-        end, keymaps)
+        for _, keymap in pairs(keymaps) do
+          local mode = keymap[1]
+          local key = keymap[2]
+          local func = keymap[3]
+          local desc = keymap[4]
+
+          vim.keymap.set(mode, key, func, { buffer = bufnr, desc = desc })
+        end
       end
 
       -- AutoCommand: Buffer-local keybindings on LspAttach
