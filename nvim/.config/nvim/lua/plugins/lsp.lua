@@ -1,10 +1,13 @@
 return {
   {
-    "neovim/nvim-lspconfig",
+    "mason-org/mason-lspconfig.nvim",
     dependencies = {
       {
         "williamboman/mason.nvim",
-        dependencies = { "williamboman/mason-lspconfig.nvim" },
+        dependencies = {
+          { "mason-org/mason.nvim", opts = {} },
+          "neovim/nvim-lspconfig",
+        },
         opts = {
           ui = {
             icons = {
