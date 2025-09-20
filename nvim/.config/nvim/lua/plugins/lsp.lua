@@ -1,61 +1,50 @@
 return {
   {
-    "mason-org/mason-lspconfig.nvim",
-    dependencies = {
-      {
-        "williamboman/mason.nvim",
-        dependencies = {
-          { "mason-org/mason.nvim", opts = {} },
-          "neovim/nvim-lspconfig",
+    {
+      "mason-org/mason-lspconfig.nvim",
+      opts = {},
+      dependencies = {
+        { "mason-org/mason.nvim", opts = {} },
+        "neovim/nvim-lspconfig",
+      },
+    },
+    {
+      "folke/lazydev.nvim",
+      ft = "lua",
+      opts = {
+        library = {
+          { path = "${3rd}/luv/library", words = { "vim%.uv" } },
         },
-        opts = {
-          ui = {
-            icons = {
-              package_installed = "✓",
-              package_pending = "➜",
-              package_uninstalled = "✗",
+      },
+    },
+    {
+      "saghen/blink.cmp",
+      dependencies = "rafamadriz/friendly-snippets",
+      version = "*",
+      opts = {
+        keymap = { preset = "default" },
+        appearance = {
+          use_nvim_cmp_as_default = true,
+          nerd_font_variant = "mono",
+        },
+        sources = {
+          default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+          providers = {
+            lazydev = {
+              name = "LazyDev",
+              module = "lazydev.integrations.blink",
+              score_offset = 100, -- Prioritize LazyDev completions
             },
           },
         },
-      },
-      {
-        "folke/lazydev.nvim",
-        ft = "lua",
-        opts = {
-          library = {
-            { path = "${3rd}/luv/library", words = { "vim%.uv" } },
-          },
+        completion = {
+          menu = { border = "single" },
+          documentation = { window = { border = "single" } },
         },
+        fuzzy = { implementation = "prefer_rust_with_warning" },
+        signature = { window = { border = "single" } },
       },
-      {
-        "saghen/blink.cmp",
-        dependencies = "rafamadriz/friendly-snippets",
-        version = "*",
-        opts = {
-          keymap = { preset = "default" },
-          appearance = {
-            use_nvim_cmp_as_default = true,
-            nerd_font_variant = "mono",
-          },
-          sources = {
-            default = { "lazydev", "lsp", "path", "snippets", "buffer" },
-            providers = {
-              lazydev = {
-                name = "LazyDev",
-                module = "lazydev.integrations.blink",
-                score_offset = 100, -- Prioritize LazyDev completions
-              },
-            },
-          },
-          completion = {
-            menu = { border = "single" },
-            documentation = { window = { border = "single" } },
-          },
-          fuzzy = { implementation = "prefer_rust_with_warning" },
-          signature = { window = { border = "single" } },
-        },
-        opts_extend = { "sources.default" },
-      },
+      opts_extend = { "sources.default" },
     },
     config = function()
       local cmp_lsp = require("blink.cmp").get_lsp_capabilities
