@@ -1,20 +1,9 @@
 return {
   {
-    "neovim/nvim-lspconfig",
+    "mason-org/mason-lspconfig.nvim",
     dependencies = {
-      {
-        "williamboman/mason.nvim",
-        dependencies = { "williamboman/mason-lspconfig.nvim" },
-        opts = {
-          ui = {
-            icons = {
-              package_installed = "✓",
-              package_pending = "➜",
-              package_uninstalled = "✗",
-            },
-          },
-        },
-      },
+      { "mason-org/mason.nvim", opts = {} },
+      "neovim/nvim-lspconfig",
       {
         "folke/lazydev.nvim",
         ft = "lua",
