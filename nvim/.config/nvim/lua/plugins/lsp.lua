@@ -1,9 +1,7 @@
 return {
   {
-    "mason-org/mason-lspconfig.nvim",
+    "mason-org/mason.nvim",
     dependencies = {
-      { "mason-org/mason.nvim", opts = {} },
-      "neovim/nvim-lspconfig",
       {
         "folke/lazydev.nvim",
         ft = "lua",
@@ -43,18 +41,17 @@ return {
         opts_extend = { "sources.default" },
       },
     },
-    opts = {
-      diagnostics = {
-        float = { border = "rounded", source = true },
-        virtual_text = false,
-        signs = true,
-        underline = false,
-        update_in_insert = false,
-        severity_sort = true,
-      },
-      border = "rounded",
-      servers = {
+    config = function(_, opts)
+      -- Setup Mason first
+      require("mason").setup(opts)
+
+      local cmp_lsp = require("blink.cmp").get_lsp_capabilities
+
+      -- LSP server configurations
+      local servers = {
         clangd = {
+          cmd = { "clangd" },
+          filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
           settings = {
             clangd = {
               offsetEncoding = { "utf-8", "utf-16" },
@@ -67,6 +64,8 @@ return {
           },
         },
         gopls = {
+          cmd = { "gopls" },
+          filetypes = { "go", "gomod", "gowork", "gotmpl" },
           capabilities = {
             workspace = {
               didChangeWatchedFiles = { dynamicRegistration = true },
@@ -88,6 +87,8 @@ return {
           },
         },
         lua_ls = {
+          cmd = { "lua-language-server" },
+          filetypes = { "lua" },
           settings = {
             Lua = {
               completion = {
@@ -97,8 +98,14 @@ return {
             },
           },
         },
-        ols = { settings = {} },
+        ols = {
+          cmd = { "ols" },
+          filetypes = { "odin" },
+          settings = {},
+        },
         rust_analyzer = {
+          cmd = { "rust-analyzer" },
+          filetypes = { "rust" },
           settings = {
             ["rust-analyzer"] = {
               cargo = { allFeatures = true },
@@ -106,33 +113,33 @@ return {
             },
           },
         },
-        zls = { settings = { semantic_tokens = "partial" } },
-      },
-    },
-    config = function(_, opts)
-      local lspconfig = require("lspconfig")
-      local cmp_lsp = require("blink.cmp").get_lsp_capabilities
+        zls = {
+          cmd = { "zls" },
+          filetypes = { "zig", "zir" },
+          settings = { semantic_tokens = "partial" },
+        },
+      }
 
-      -- Apply diagnostics configuration
-      vim.diagnostic.config(opts.diagnostics)
+      -- Diagnostics configuration
+      vim.diagnostic.config({
+        float = { border = "rounded", source = true },
+        virtual_text = false,
+        signs = true,
+        underline = false,
+        update_in_insert = false,
+        severity_sort = true,
+      })
 
       -- Override default floating preview
       local orig = vim.lsp.util.open_floating_preview
       ---@diagnostic disable-next-line
       vim.lsp.util.open_floating_preview = function(contents, syntax, o, ...)
         o = o or {}
-        o.border = opts.border
+        o.border = "rounded"
         return orig(contents, syntax, o, ...)
       end
 
-      -- Set up LSP servers
-      for server, server_config in pairs(opts.servers) do
-        lspconfig[server].setup(vim.tbl_deep_extend("force", server_config, {
-          capabilities = cmp_lsp(server_config.capabilities),
-        }))
-      end
-
-      -- Set LSP keymaps
+      -- Set LSP keymaps function
       local function on_lsp_attach(args)
         local bufnr = args.buf
         local keymaps = {
@@ -157,6 +164,20 @@ return {
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
         callback = on_lsp_attach,
       })
+
+      -- Set up LSP servers using vim.lsp.config (Neovim 0.11+)
+      for server_name, server_config in pairs(servers) do
+        -- Configure the LSP server using vim.lsp.config
+        vim.lsp.config(
+          server_name,
+          vim.tbl_deep_extend("force", server_config, {
+            capabilities = cmp_lsp(server_config.capabilities),
+          })
+        )
+
+        -- Enable the LSP server using vim.lsp.enable
+        vim.lsp.enable(server_name)
+      end
     end,
   },
 }
