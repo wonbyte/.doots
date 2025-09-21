@@ -113,11 +113,6 @@ return {
             },
           },
         },
-        zls = {
-          cmd = { "zls" },
-          filetypes = { "zig", "zir" },
-          settings = { semantic_tokens = "partial" },
-        },
       }
 
       -- Diagnostics configuration
@@ -159,15 +154,14 @@ return {
         end, keymaps)
       end
 
-      -- AutoCommand: Buffer-local keybindings on LspAttach
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
         callback = on_lsp_attach,
       })
 
-      -- Set up LSP servers using vim.lsp.config (Neovim 0.11+)
+      -- Set up LSP servers
       for server_name, server_config in pairs(servers) do
-        -- Configure the LSP server using vim.lsp.config
+        -- Configure the LSP server
         vim.lsp.config(
           server_name,
           vim.tbl_deep_extend("force", server_config, {
@@ -175,7 +169,7 @@ return {
           })
         )
 
-        -- Enable the LSP server using vim.lsp.enable
+        -- Enable the LSP server
         vim.lsp.enable(server_name)
       end
     end,
