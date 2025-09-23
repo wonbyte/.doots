@@ -51,7 +51,7 @@ return {
       local servers = {
         clangd = {
           cmd = { "clangd" },
-          filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
+          filetypes = { "c", "cpp", "objc", "objcpp" },
           settings = {
             clangd = {
               offsetEncoding = { "utf-8", "utf-16" },
