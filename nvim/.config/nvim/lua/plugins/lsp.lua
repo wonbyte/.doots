@@ -1,50 +1,41 @@
 return {
   {
     "mason-org/mason.nvim",
-    dependencies = {
-      {
-        "folke/lazydev.nvim",
-        ft = "lua",
-        opts = {
-          library = {
-            { path = "${3rd}/luv/library", words = { "vim%.uv" } },
-          },
-        },
-      },
-      {
-        "saghen/blink.cmp",
-        dependencies = "rafamadriz/friendly-snippets",
-        version = "*",
-        opts = {
-          keymap = { preset = "default" },
-          appearance = {
-            use_nvim_cmp_as_default = true,
-            nerd_font_variant = "mono",
-          },
-          sources = {
-            default = { "lazydev", "lsp", "path", "snippets", "buffer" },
-            providers = {
-              lazydev = {
-                name = "LazyDev",
-                module = "lazydev.integrations.blink",
-                score_offset = 100, -- Prioritize LazyDev completions
-              },
-            },
-          },
-          completion = {
-            menu = { border = "single" },
-            documentation = { window = { border = "single" } },
-          },
-          fuzzy = { implementation = "prefer_rust_with_warning" },
-          signature = { window = { border = "single" } },
-        },
-        opts_extend = { "sources.default" },
+    opts = {},
+    config = function(_, opts)
+      require("mason").setup(opts)
+    end,
+  },
+  {
+    "folke/lazydev.nvim",
+    ft = "lua",
+    opts = {
+      library = {
+        { path = "${3rd}/luv/library", words = { "vim%.uv" } },
       },
     },
-    config = function(_, opts)
-      -- Setup Mason first
-      require("mason").setup(opts)
-
+  },
+  {
+    "saghen/blink.cmp",
+    opts = {
+      sources = {
+        -- add lazydev to your completion providers
+        default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+        providers = {
+          lazydev = {
+            name = "LazyDev",
+            module = "lazydev.integrations.blink",
+            -- make lazydev completions top priority (see `:h blink.cmp`)
+            score_offset = 100,
+          },
+        },
+      },
+    },
+  },
+  {
+    "neovim/nvim-lspconfig", -- Add this as a separate plugin for LSP configuration
+    dependencies = { "mason-org/mason.nvim", "saghen/blink.cmp" },
+    config = function()
       local cmp_lsp = require("blink.cmp").get_lsp_capabilities
 
       -- LSP server configurations
