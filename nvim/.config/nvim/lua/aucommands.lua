@@ -27,7 +27,7 @@ autocmd("TextYankPost", {
   group = yank_group,
   desc = "Highlight yanked text briefly",
   callback = function()
-    vim.highlight.on_yank({
+    vim.hl.on_yank({
       higroup = "IncSearch",
       timeout = 100,
       on_visual = true,
