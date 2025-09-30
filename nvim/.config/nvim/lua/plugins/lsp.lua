@@ -1,7 +1,7 @@
 return {
   {
     "mason-org/mason.nvim",
-    opts = {}, -- Add any mason-specific options here
+    cmd = { "Mason", "MasonInstall", "MasonUpdate" },
     config = function(_, opts)
       require("mason").setup(opts)
     end,
@@ -45,7 +45,7 @@ return {
     opts_extend = { "sources.default" },
   },
   {
-    "neovim/nvim-lspconfig", -- Add this as a separate plugin for LSP configuration
+    "neovim/nvim-lspconfig",
     dependencies = { "mason-org/mason.nvim", "saghen/blink.cmp" },
     config = function()
       local cmp_lsp = require("blink.cmp").get_lsp_capabilities
