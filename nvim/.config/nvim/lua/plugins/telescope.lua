@@ -32,7 +32,14 @@ local opts = {
     selection_caret = " ",
 
     file_sorter = sorters.get_fuzzy_file,
-    file_ignore_patterns = { ".git/", "target/", "build/", ".cache/" },
+    file_ignore_patterns = {
+      "build/",
+      ".cache/",
+      "dist",
+      ".git/",
+      "node_modules",
+      "target/",
+    },
     path_display = { "smart" },
 
     mappings = {

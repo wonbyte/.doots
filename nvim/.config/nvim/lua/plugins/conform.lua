@@ -1,15 +1,16 @@
 require("conform").setup({
   formatters_by_ft = {
-    lua = { "stylua" },
-    rust = { "rustfmt" },
-    go = { "goimports", "gofmt" },
+    astro = { "prettier" },
     c = { "clang-format" },
     cpp = { "clang-format" },
-    javascript = { "prettier" },
-    typescript = { "prettier" },
-    html = { "prettier" },
     css = { "prettier" },
+    go = { "goimports", "gofmt" },
+    html = { "prettier" },
+    javascript = { "prettier" },
     json = { "prettier" },
+    lua = { "stylua" },
+    rust = { "rustfmt" },
+    typescript = { "prettier" },
   },
   default_format_opts = {
     lsp_format = "fallback",
