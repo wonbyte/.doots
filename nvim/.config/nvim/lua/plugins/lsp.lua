@@ -28,6 +28,15 @@ local servers = {
       offsetEncoding = "utf-8",
     },
   },
+  -- JSON (installed via Mason as "json-lsp"; executable links as vscode-json-language-server)
+  jsonls = {
+    cmd = { "vscode-json-language-server", "--stdio" },
+    filetypes = { "json", "jsonc" },
+    root_markers = { ".git" },
+    settings = {
+      json = { validate = { enable = true } },
+    },
+  },
   lua_ls = {
     cmd = { "lua-language-server" },
     filetypes = { "lua" },
@@ -97,8 +106,8 @@ local servers = {
     },
     root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
     settings = {
-      typescript = { inlayHints = ts_inlay_hints },
       javascript = { inlayHints = ts_inlay_hints },
+      typescript = { inlayHints = ts_inlay_hints },
     },
   },
 }
@@ -121,8 +130,12 @@ local function on_lsp_attach(args)
   local client = vim.lsp.get_client_by_id(args.data.client_id)
 
   if client then
-    -- Disable ts_ls formatting in favour of prettier via conform
-    if client.name == "ts_ls" then
+    -- Disable built-in formatting for servers where Prettier (via conform) should
+    -- always win — this is a deliberate belt-and-suspenders choice: conform's
+    -- lsp_format = "fallback" already prefers Prettier when it's available, but
+    -- this guarantees the LSP's own formatter never fires even if Prettier is
+    -- temporarily missing, rather than silently reformatting with different rules.
+    if client.name == "ts_ls" or client.name == "jsonls" then
       client.server_capabilities.documentFormattingProvider = false
       client.server_capabilities.documentRangeFormattingProvider = false
     end
@@ -137,7 +150,11 @@ local function on_lsp_attach(args)
       "n",
       "K",
       function()
-        vim.lsp.buf.hover({ border = "rounded" })
+        vim.lsp.buf.hover({
+          border = "rounded",
+          max_width = 100,
+          max_height = 40,
+        })
       end,
       "[LSP] Hover documentation",
     },

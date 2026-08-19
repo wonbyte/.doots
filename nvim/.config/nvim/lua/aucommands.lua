@@ -36,3 +36,23 @@ autocmd("TextYankPost", {
     vim.hl.on_yank({ higroup = "IncSearch", timeout = 100 })
   end,
 })
+
+autocmd("FileType", {
+  group = augroup("WebIndent", { clear = true }),
+  pattern = {
+    "astro",
+    "css",
+    "html",
+    "javascript",
+    "json",
+    "jsonc",
+    "typescript",
+    "yaml",
+  },
+  desc = "2-space indentation for web/config filetypes",
+  callback = function()
+    vim.opt_local.tabstop = 2
+    vim.opt_local.shiftwidth = 2
+    vim.opt_local.softtabstop = 2
+  end,
+})

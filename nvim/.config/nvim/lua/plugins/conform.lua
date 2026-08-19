@@ -8,6 +8,7 @@ require("conform").setup({
     html = { "prettier" },
     javascript = { "prettier" },
     json = { "prettier" },
+    jsonc = { "prettier" },
     lua = { "stylua" },
     rust = { "rustfmt" },
     typescript = { "prettier" },
