@@ -12,6 +12,8 @@ set -gx VISUAL nvim
 # Disable greeting
 set -g fish_greeting ""
 
+direnv hook fish | source
+
 # PATH (guard with existence checks to avoid dead entries)
 for p in $HOME/.local/bin $HOME/.cargo/bin $GOPATH/bin /usr/local/go/bin
     if test -d $p
