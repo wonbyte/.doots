@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CODE_DIR="${CODE_DIR:-$HOME/code}"
+
+check_dependencies() {
+    command -v tmux >/dev/null || {
+        echo "Error: tmux is not installed. Please install tmux and try again." >&2
+        exit 1
+    }
+
+    if ! command -v fzf >/dev/null; then
+        echo "Warning: fzf is not installed. Directory selection will not be interactive." >&2
+    fi
+}
+
+resolve_directory_arg() {
+    local arg="$1"
+
+    # Exact path?
+    if [[ -d "$arg" ]]; then
+        printf '%s\n' "$arg"
+        return
+    fi
+
+    # Shorthand under CODE_DIR?
+    if [[ -d "$CODE_DIR/$arg" ]]; then
+        printf '%s\n' "$CODE_DIR/$arg"
+        return
+    fi
+
+    echo "Error: Directory not found: $arg" >&2
+    exit 1
+}
+
+select_directory() {
+    if [[ $# -gt 1 ]]; then
+        echo "Error: too many arguments." >&2
+        exit 1
+    elif [[ $# -eq 1 ]]; then
+        resolve_directory_arg "$1"
+    elif command -v fzf >/dev/null; then
+        if [[ ! -d "$CODE_DIR" ]]; then
+            echo "Error: $CODE_DIR directory does not exist. Create it or set CODE_DIR." >&2
+            exit 1
+        fi
+        find "$CODE_DIR" -mindepth 1 -maxdepth 1 -type d \
+            | sort \
+            | fzf || true
+    else
+        echo "Error: No directory provided and fzf is not available for interactive selection." >&2
+        exit 1
+    fi
+}
+
+get_tmux_session_name() {
+    local dir="$1"
+    basename "$dir" | tr ' .:/\\' '_____'
+}
+
+main() {
+    check_dependencies
+
+    local selected
+    selected="$(select_directory "$@")"
+
+    [[ -z "$selected" ]] && exit 0
+
+    local selected_name
+    selected_name="$(get_tmux_session_name "$selected")"
+
+    if [[ -n ${TMUX:-} ]]; then
+        tmux new-session -d -s "$selected_name" -c "$selected" 2>/dev/null || true
+        tmux switch-client -t "$selected_name"
+    else
+        exec tmux new-session -A -s "$selected_name" -c "$selected"
+    fi
+}
+
+main "$@"
