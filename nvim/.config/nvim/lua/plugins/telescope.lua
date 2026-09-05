@@ -38,6 +38,8 @@ local opts = {
       ".git/",
       "node_modules/",
       "target/",
+      "go.mod",
+      "go.sum",
     },
     path_display = { "smart" },
 
