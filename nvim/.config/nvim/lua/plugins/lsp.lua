@@ -181,23 +181,43 @@ local servers = {
   },
   -- TypeScript / JavaScript (TS 7 native Go-based LSP, invoked as `tsc --lsp`).
   tsgo = {
-    -- cmd as a function instead of a list: this resolves the workspace's OWN
-    -- tsc at server-start time, so each project uses the TypeScript version it
-    -- pins -- what `npx tsc` did, minus the npx wrapper's per-spawn overhead.
-    --
-    -- When cmd is a function it does NOT return a command list; it must start
-    -- the RPC client itself via vim.lsp.rpc.start(cmd, dispatchers).
+    -- cmd as a function: resolve the workspace's OWN TypeScript at server
+    -- start, so each project uses the version it pins. When cmd is a
+    -- function it must start the RPC client itself via vim.lsp.rpc.start().
     cmd = function(dispatchers, config)
       -- Resolve from the buffer being edited, not config.root_dir or cwd:
-      -- both proved unreliable at cmd-invocation time and produced a bare
-      -- "tsc" that was not on PATH. Walking upward from the actual file is
-      -- independent of both.
+      -- both proved unreliable at cmd-invocation time. Walking upward from
+      -- the actual file is independent of both.
       local bufname = vim.api.nvim_buf_get_name(0)
       local start = (bufname ~= "") and vim.fs.dirname(bufname) or vim.uv.cwd()
 
+      -- Returns the major version number (7, 5, ...) from a version string
+      -- like "7.0.1" or "Version 7.0.1". Returns nil if no number is found.
+      local function major(s)
+        return tonumber((s or ""):match("(%d+)%."))
+      end
+
+      -- Returns the major version of the `typescript` package inside one
+      -- node_modules dir, or nil if it is missing or unreadable.
+      -- Why: `.bin/tsc` exists for BOTH old TypeScript (5.x, JavaScript) and
+      -- TS 7+ (native Go). Only 7+ understands `--lsp`. Old tsc exits with
+      -- code 1 and prints its error to stdout, which Neovim reads as LSP
+      -- data and drops -- so lsp.log shows nothing. We must check first.
+      local function ts_major(nm)
+        local ok, lines =
+          pcall(vim.fn.readfile, nm .. "/typescript/package.json")
+        if not ok or #lines == 0 then
+          return nil
+        end
+        local ok2, pkg = pcall(vim.json.decode, table.concat(lines, "\n"))
+        if not ok2 or type(pkg) ~= "table" then
+          return nil
+        end
+        return major(pkg.version)
+      end
+
       -- Every node_modules going up from the file, nearest first.
-      -- limit = math.huge covers monorepos where tsc is hoisted to a
-      -- node_modules higher up than the nearest package-level one.
+      -- limit = math.huge covers monorepos where deps are hoisted higher up.
       local nm_dirs = vim.fs.find("node_modules", {
         upward = true,
         type = "directory",
@@ -205,41 +225,64 @@ local servers = {
         limit = math.huge,
       })
 
-      -- TS 7.0 stable (the `typescript` package) ships `tsc`;
-      -- @typescript/native-preview ships `tsgo`. Probe both, use the first
-      -- .bin that actually has one. fs_stat follows the symlink, so this
-      -- checks the real target (e.g. .bin/tsc -> ../typescript/bin/tsc).
+      -- Remember if we skipped an old tsc, so the error message can say why.
+      local skipped_old = nil
+
       local bin
       for _, nm in ipairs(nm_dirs) do
-        for _, name in ipairs({ "tsc", "tsgo" }) do
-          local p = nm .. "/.bin/" .. name
-          if vim.uv.fs_stat(p) then
-            bin = p
-            break
-          end
-        end
-        if bin then
+        -- 1. @typescript/native-preview ships `tsgo`. It is always native,
+        --    so it wins with no version check.
+        local tsgo = nm .. "/.bin/tsgo"
+        if vim.uv.fs_stat(tsgo) then
+          bin = tsgo
           break
         end
+
+        -- 2. `tsc` only counts when the typescript package is 7 or newer.
+        local tsc = nm .. "/.bin/tsc"
+        if vim.uv.fs_stat(tsc) then
+          local v = ts_major(nm)
+          if v and v >= 7 then
+            bin = tsc
+            break
+          end
+          skipped_old = skipped_old
+            or (tsc .. " (TypeScript " .. tostring(v) .. ")")
+        end
       end
 
-      -- No workspace-local binary anywhere up the tree: last resort is a
-      -- global tsgo/tsc on PATH (fresh clone before `npm install`, etc).
+      -- No usable local binary: fall back to a global one on PATH.
       if not bin then
-        for _, name in ipairs({ "tsgo", "tsc" }) do
-          if vim.fn.executable(name) == 1 then
-            bin = name
-            break
+        if vim.fn.executable("tsgo") == 1 then
+          -- Global tsgo is always native.
+          bin = "tsgo"
+        elseif vim.fn.executable("tsc") == 1 then
+          -- Global tsc may also be old 5.x. Ask it for its version.
+          -- Output looks like "Version 7.0.1".
+          local res = vim.system({ "tsc", "--version" }, { text = true }):wait()
+          local v = major(res.stdout)
+          if v and v >= 7 then
+            bin = "tsc"
+          else
+            skipped_old = skipped_old
+              or ("global tsc (TypeScript " .. tostring(v) .. ")")
           end
         end
       end
 
-      -- Nothing local OR global. cmd-as-function MUST return an rpc client:
-      -- client.lua assigns the return value to self.rpc with no nil check,
-      -- so returning nil produces a cryptic nil-index traceback later.
-      -- error() here surfaces a readable message at the actual failure point.
+      -- cmd-as-function MUST return an rpc client: client.lua assigns the
+      -- return value to self.rpc with no nil check. error() gives a clear
+      -- message here instead of a cryptic nil-index traceback later.
       if not bin then
-        error("tsgo: no local or global tsc/tsgo found upward from " .. start)
+        local msg = "tsgo: no native tsgo or TypeScript 7+ tsc found upward from "
+          .. start
+        if skipped_old then
+          msg = msg
+            .. "; skipped old "
+            .. skipped_old
+            .. ". Fix: npm install -D @typescript/native-preview"
+        end
+        error(msg)
       end
 
       return vim.lsp.rpc.start({ bin, "--lsp", "--stdio" }, dispatchers)
