@@ -1,0 +1,10 @@
+# fish
+fisher.fish
+fish_plugins
+fish_variables
+
+# Ignore everything inside .local/bin/
+bin/.local/bin/*
+
+# Except the tmux-sessionizer
+!bin/.local/bin/tmux-sessionizer
