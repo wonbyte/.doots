@@ -44,19 +44,6 @@ do
 end
 
 local servers = {
-  clangd = {
-    cmd = { "clangd" },
-    filetypes = { "c", "cpp", "objc", "objcpp" },
-    root_markers = {
-      "compile_commands.json",
-      "compile_flags.txt",
-      ".clangd",
-      ".git",
-    },
-    init_options = {
-      offsetEncoding = "utf-8",
-    },
-  },
   -- Go
   gopls = {
     cmd = { "gopls" },
@@ -99,88 +86,6 @@ local servers = {
       },
     },
   },
-  -- Java (installed via Mason as "jdtls"; plugins/mason.lua auto-installs it
-  -- and puts Mason's bin dir on PATH, so "jdtls" below resolves to Mason's
-  -- wrapper script). nvim-jdtls is pcall-guarded the
-  -- same way as SchemaStore: missing plugin = no jdt:// support, not a crash.
-  jdtls = {
-    cmd = function(dispatchers, config)
-      local root = config.root_dir or vim.uv.cwd()
-      -- One workspace/index dir per project. Keyed by name + path hash so two
-      -- repos that are both called "api" don't share (and corrupt) an index.
-      -- If jdtls ever gets confused, deleting this dir is the reset button.
-      local data_dir = vim.fn.stdpath("cache")
-        .. "/jdtls/"
-        .. vim.fs.basename(root)
-        .. "-"
-        .. vim.fn.sha256(root):sub(1, 8)
-
-      local cmd = {
-        "jdtls",
-        -- The wrapper only forwards --jvm-arg= to the JVM; bare -Xmx is ignored.
-        "--jvm-arg=-Xmx4G",
-        "--jvm-arg=-XX:+UseParallelGC",
-      }
-      -- Mason's jdtls package ships lombok.jar; harmless if a project
-      -- doesn't use Lombok.
-      -- $MASON is set by require("mason").setup() (plugins/mason.lua runs
-      -- before this file); the stdpath fallback is Mason's default root.
-      local mason_root = vim.env.MASON or (vim.fn.stdpath("data") .. "/mason")
-      local lombok = mason_root .. "/packages/jdtls/lombok.jar"
-      if vim.uv.fs_stat(lombok) then
-        table.insert(cmd, "--jvm-arg=-javaagent:" .. lombok)
-      end
-      vim.list_extend(cmd, { "-data", data_dir })
-
-      return vim.lsp.rpc.start(cmd, dispatchers, { cwd = root })
-    end,
-    filetypes = { "java" },
-    -- First group wins first: wrapper scripts / .git mark the OUTER root of a
-    -- multi-module Maven/Gradle build, so submodules share one server.
-    root_markers = {
-      { "mvnw", "gradlew", "settings.gradle", "settings.gradle.kts", ".git" },
-      { "pom.xml", "build.gradle", "build.gradle.kts", "build.xml" },
-    },
-    -- extendedClientCapabilities turns on classFileContentsSupport, which is
-    -- what makes gd into JDK/library classes return openable jdt:// URIs.
-    init_options = (function()
-      local ok, jdtls = pcall(require, "jdtls")
-      return ok
-          and { extendedClientCapabilities = jdtls.extendedClientCapabilities }
-        or {}
-    end)(),
-    settings = {
-      java = {
-        -- Keep .project/.classpath/.settings out of the repo.
-        import = { generatesMetadataFilesAtProjectRoot = false },
-        -- Re-import automatically when pom.xml / build.gradle change.
-        configuration = { updateBuildConfiguration = "automatic" },
-        eclipse = { downloadSources = true },
-        maven = { downloadSources = true },
-        -- Decompile classes that have no source jar.
-        contentProvider = { preferred = "fernflower" },
-        signatureHelp = { enabled = true },
-        -- Which hints the server sends; rendering is still gated by the
-        -- <leader>h toggle, same as tsgo/gopls.
-        inlayHints = { parameterNames = { enabled = "literals" } },
-        completion = {
-          favoriteStaticMembers = {
-            "org.junit.jupiter.api.Assertions.*",
-            "org.mockito.Mockito.*",
-            "org.mockito.ArgumentMatchers.*",
-            "java.util.Objects.requireNonNull",
-          },
-        },
-        -- Never collapse imports into wildcards.
-        sources = {
-          organizeImports = {
-            starThreshold = 9999,
-            staticStarThreshold = 9999,
-          },
-        },
-      },
-    },
-  },
   -- XML / XSD / XSLT (installed via Mason as "lemminx"). Format settings
   -- carried over from the old LazyVim config: keep attribute layout as
   -- written and allow long lines instead of hard-wrapping at 80.
@@ -214,52 +119,6 @@ local servers = {
           callSnippet = "Disable",
           keywordSnippet = "Disable",
         },
-      },
-    },
-  },
-  -- Python completions, hover, go-to-definition (via jedi), and type
-  -- checking (via mypy). Runs alongside ruff's standalone server, which
-  -- handles linting and formatting. pylsp is installed via Mason;
-  -- pylsp-mypy and python-lsp-ruff are pip-installed into Mason's pylsp
-  -- venv (they are not Mason packages).
-  pylsp = {
-    cmd = { "pylsp" },
-    filetypes = { "python" },
-    root_markers = { "pyproject.toml", "setup.py", "setup.cfg", ".git" },
-    -- Force UTF-8 to match ruff. pylsp doesn't implement the LSP 3.17
-    -- positionEncodings negotiation, so it defaults to UTF-16. This
-    -- client-side override makes neovim treat pylsp's offsets as UTF-8,
-    -- eliminating the mixed encoding warning.
-    offset_encoding = "utf-8",
-    settings = {
-      pylsp = {
-        plugins = {
-          -- ruff runs as a standalone server (see ruff entry below),
-          -- so disable pylsp's ruff plugin to avoid duplicate diagnostics.
-          ruff = { enabled = false },
-          -- mypy for type checking (installed into Mason's pylsp venv).
-          pylsp_mypy = { enabled = true },
-          -- Disable every built-in linter/formatter that ruff replaces.
-          pycodestyle = { enabled = false },
-          pyflakes = { enabled = false },
-          mccabe = { enabled = false },
-          autopep8 = { enabled = false },
-          yapf = { enabled = false },
-        },
-      },
-    },
-  },
-  -- Python linting. Replaces pyflakes/pycodestyle/mccabe -- the exact
-  -- plugins that used to be disabled in this file's old pylsp config.
-  -- This is Ruff's native Rust server ("ruff server"), not the deprecated
-  -- "ruff-lsp" Python package.
-  ruff = {
-    cmd = { "ruff", "server" },
-    filetypes = { "python" },
-    root_markers = { "pyproject.toml", "ruff.toml", ".ruff.toml", ".git" },
-    init_options = {
-      settings = {
-        lineLength = 80,
       },
     },
   },
@@ -491,46 +350,6 @@ local function on_lsp_attach(args)
     if client.name == "tsgo" or client.name == "jsonls" then
       client.server_capabilities.documentFormattingProvider = false
       client.server_capabilities.documentRangeFormattingProvider = false
-    end
-
-    -- Ruff's server is documented as lint/format-only and is meant to run
-    -- alongside a full Python LSP for hover/nav (see Astral's own editor
-    -- setup docs) -- pylsp owns hover here, so this just makes that
-    -- explicit instead of relying on Ruff never advertising the capability.
-    if client.name == "ruff" then
-      client.server_capabilities.hoverProvider = false
-    end
-
-    -- Java-only refactors from nvim-jdtls. These are client-side commands the
-    -- native LSP client doesn't implement, so they come from the library.
-    -- No formatting override: Java isn't in conform's formatters_by_ft, so
-    -- lsp_format = "fallback" hands it to jdtls's Eclipse formatter, which
-    -- picks up shiftwidth/expandtab from the formatting request.
-    if client.name == "jdtls" then
-      local ok, jdtls = pcall(require, "jdtls")
-      if ok then
-        local function map(mode, lhs, fn, desc)
-          vim.keymap.set(mode, lhs, fn, { buffer = bufnr, desc = desc })
-        end
-        map(
-          "n",
-          "<leader>co",
-          jdtls.organize_imports,
-          "[Java] Organize imports"
-        )
-        map(
-          "n",
-          "<leader>cv",
-          jdtls.extract_variable,
-          "[Java] Extract variable"
-        )
-        map("v", "<leader>cv", function()
-          jdtls.extract_variable(true)
-        end, "[Java] Extract variable")
-        map("v", "<leader>cm", function()
-          jdtls.extract_method(true)
-        end, "[Java] Extract method")
-      end
     end
 
     -- Inlay hints are intentionally NOT auto-enabled here: they start off in

@@ -1,5 +1,5 @@
 -- setup() prepends Mason's bin dir to PATH and sets $MASON, so servers in
--- plugins/lsp.lua can use plain executable names ("jdtls", "clangd", ...).
+-- plugins/lsp.lua can use plain executable names ("gopls", ...).
 require("mason").setup({})
 
 -- Mason packages to keep installed. mason.nvim has no ensure_installed
@@ -11,8 +11,6 @@ require("mason").setup({})
 -- Mason package names differ from vim.lsp.config server names, so each line
 -- notes the server in plugins/lsp.lua it backs. tsgo is deliberately absent:
 -- its cmd resolves TypeScript 7+ from each project's own node_modules.
--- pylsp's plugins (pylsp-mypy, python-lsp-ruff) are pip packages, not Mason
--- packages, so they still need a manual pip install into Mason's pylsp venv.
 --
 -- Formatters live here too: conform.lua calls them by name, and if one is
 -- missing conform has nothing to run, so the whitespace-trim fallback in
@@ -20,18 +18,13 @@ require("mason").setup({})
 -- exception -- it comes from rustup so it always matches the toolchain.
 local ensure_installed = {
   -- Language servers
-  "clangd", -- clangd
   "gopls", -- gopls
-  "jdtls", -- jdtls
   "json-lsp", -- jsonls (vscode-json-language-server)
   "lemminx", -- lemminx
   "lua-language-server", -- lua_ls
-  "python-lsp-server", -- pylsp
-  "ruff", -- ruff (also the Python formatter in conform.lua)
   "rust-analyzer", -- rust_analyzer
 
   -- Formatters (see conform.lua)
-  "clang-format", -- c, cpp
   "goimports", -- go
   "prettier", -- web filetypes, json
   "stylua", -- lua

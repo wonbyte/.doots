@@ -1,8 +1,8 @@
 -- Diagnostics have no inline display (virtual_text, virtual_lines and
 -- underline are all off in lsp.lua), so the statusline carries the counts.
--- vim.lsp.status() shows server progress messages -- most useful for jdtls,
--- which reports "Importing Maven project" etc. while it indexes. It returns
--- "" when idle, so the component disappears on its own.
+-- vim.lsp.status() shows server progress messages (for example, while a
+-- server indexes a large project). It returns "" when idle, so the
+-- component disappears on its own.
 local function lsp_status()
   return vim.lsp.status()
 end

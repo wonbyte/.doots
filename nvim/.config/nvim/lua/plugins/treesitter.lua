@@ -37,8 +37,6 @@ vim.api.nvim_create_autocmd("FileType", {
 -- satisfied. No need to diff against get_installed() ourselves.
 local ensure_installed = {
   "bash",
-  "c",
-  "cpp",
   "css",
   "diff",
   "dockerfile",
@@ -46,8 +44,6 @@ local ensure_installed = {
   "gitcommit",
   "go",
   "html",
-  "java",
-  "javadoc",
   "javascript",
   "jsdoc",
   "json",
@@ -58,7 +54,6 @@ local ensure_installed = {
   -- parser only highlights block-level structure.
   "markdown_inline",
   "proto",
-  "python",
   -- Used by :InspectTree / :EditQuery and the queries in after/queries/.
   "query",
   -- Highlights regex literals embedded in other languages.

@@ -102,12 +102,6 @@ vim.pack.add({
   "https://github.com/rafamadriz/friendly-snippets",
   "https://github.com/folke/lazydev.nvim",
 
-  -- Java helpers only (jdt:// buffers, refactors). The server itself is
-  -- started by vim.lsp.config in plugins/lsp.lua, not jdtls.start_or_attach.
-  -- The jdtls server itself is installed by Mason (see plugins/mason.lua);
-  -- it needs a Java 21+ runtime on PATH or in JAVA_HOME.
-  "https://github.com/mfussenegger/nvim-jdtls",
-
   -- JSON schema catalog for jsonls. Pure data plugin (a Lua table mapping
   -- well-known filenames like package.json / tsconfig.json to their
   -- schemas). Without it, jsonls validation only applies to files that

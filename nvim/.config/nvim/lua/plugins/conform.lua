@@ -1,8 +1,6 @@
 require("conform").setup({
   formatters_by_ft = {
     astro = { "prettier" },
-    c = { "clang-format" },
-    cpp = { "clang-format" },
     css = { "prettier" },
     -- goimports fixes imports AND formats in gofmt style, so a separate
     -- gofmt pass is redundant.
@@ -13,19 +11,6 @@ require("conform").setup({
     json = { "prettier" },
     jsonc = { "prettier" },
     lua = { "stylua" },
-    -- Python: conform runs these against the `ruff` CLI directly (not the
-    -- LSP client from lsp.lua) -- ruff_fix, ruff_format, and
-    -- ruff_organize_imports are formatter definitions conform.nvim ships
-    -- built in. This is the exact sequence Astral's own docs recommend for
-    -- conform.nvim.
-    python = {
-      -- Fix auto-fixable lint errors (unused imports, etc).
-      "ruff_fix",
-      -- Run the Ruff formatter (a drop-in for black).
-      "ruff_format",
-      -- Sort/organize imports.
-      "ruff_organize_imports",
-    },
     rust = { "rustfmt" },
     typescript = { "prettier" },
     typescriptreact = { "prettier" },
