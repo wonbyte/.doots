@@ -1,11 +1,16 @@
 local telescope = require("telescope")
-local finders = require("telescope.finders")
-local pickers = require("telescope.pickers")
-local make_entry = require("telescope.make_entry")
-local sorters = require("telescope.sorters")
-local conf = require("telescope.config").values
 local builtin = require("telescope.builtin")
 local actions = require("telescope.actions")
+
+-- ripgrep flags shared by the default grep pickers and live_multigrep.
+local rg_flags = {
+  "--color=never",
+  "--no-heading",
+  "--with-filename",
+  "--line-number",
+  "--column",
+  "--smart-case",
+}
 
 local opts = {
   defaults = {
@@ -18,15 +23,7 @@ local opts = {
       },
       prompt_position = "top",
     },
-    vimgrep_arguments = {
-      "rg",
-      "--color=never",
-      "--no-heading",
-      "--with-filename",
-      "--line-number",
-      "--column",
-      "--smart-case",
-    },
+    vimgrep_arguments = vim.list_extend({ "rg" }, rg_flags),
     sorting_strategy = "ascending",
     prompt_prefix = "  ",
     selection_caret = " ",
@@ -57,6 +54,10 @@ local opts = {
 
 -- Search dotfiles using Telescope and ripgrep
 local function search_dotfiles()
+  local finders = require("telescope.finders")
+  local pickers = require("telescope.pickers")
+  local make_entry = require("telescope.make_entry")
+  local conf = require("telescope.config").values
   local dotfiles_dir = vim.env.DOTFILES or vim.fn.expand("~/.doots")
 
   local picker_opts = { cwd = dotfiles_dir }
@@ -98,6 +99,11 @@ end
 
 -- Multi-field live grep with pattern and glob
 local function live_multigrep()
+  local finders = require("telescope.finders")
+  local pickers = require("telescope.pickers")
+  local make_entry = require("telescope.make_entry")
+  local sorters = require("telescope.sorters")
+  local conf = require("telescope.config").values
   local picker_opts = {}
 
   local finder = finders.new_async_job({
@@ -110,24 +116,17 @@ local function live_multigrep()
       -- ripgrep pattern, so the input is: <pattern><space><space><glob>.
       -- With only one space, pieces[2] stays nil and no glob is applied.
       local pieces = vim.split(prompt, "  ")
-      local args = { "rg" }
-
-      if pieces[1] and pieces[1] ~= "" then
-        vim.list_extend(args, { "-e", pieces[1] })
+      -- No pattern yet (prompt starts with the separator): run nothing.
+      if pieces[1] == "" then
+        return nil
       end
+      local args = { "rg", "-e", pieces[1] }
 
       if pieces[2] and pieces[2] ~= "" then
         vim.list_extend(args, { "-g", pieces[2] })
       end
 
-      return vim.list_extend(args, {
-        "--color=never",
-        "--no-heading",
-        "--with-filename",
-        "--line-number",
-        "--column",
-        "--smart-case",
-      })
+      return vim.list_extend(args, rg_flags)
     end,
     cwd = vim.uv.cwd(),
     entry_maker = make_entry.gen_from_vimgrep(picker_opts),

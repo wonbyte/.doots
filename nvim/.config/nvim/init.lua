@@ -1,3 +1,7 @@
+-- Cache compiled Lua modules on disk. Faster startup; must run before any
+-- require().
+vim.loader.enable()
+
 -- Set <Space> as the leader key (must be set before plugins are loaded)
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"

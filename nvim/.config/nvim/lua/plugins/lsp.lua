@@ -28,21 +28,6 @@ vim.lsp.config("*", {
   ),
 })
 
--- JSON schemas for jsonls, from SchemaStore.nvim's bundled catalog.
--- pcall-guarded so a missing plugin degrades to "no catalog" instead of
--- breaking LSP setup for every server (this file builds all configs).
--- With the catalog, jsonls matches files by name (package.json,
--- tsconfig.json, .github/workflows/*.yml's JSON cousins, etc) and
--- validates against the right schema. Without it, validation only
--- applies where the file itself declares "$schema".
-local json_schemas = {}
-do
-  local ok, schemastore = pcall(require, "schemastore")
-  if ok then
-    json_schemas = schemastore.json.schemas()
-  end
-end
-
 local servers = {
   -- Go
   gopls = {
@@ -78,13 +63,21 @@ local servers = {
     root_markers = { ".git" },
     settings = {
       json = {
-        -- SchemaStore catalog resolved above. Empty table if the plugin
-        -- is missing, which jsonls treats the same as "no schemas
-        -- configured" -- prior behavior, not an error.
-        schemas = json_schemas,
         validate = { enable = true },
       },
     },
+    -- JSON schemas from SchemaStore.nvim's bundled catalog, so jsonls
+    -- matches files by name (package.json, tsconfig.json, ...) and
+    -- validates them. The catalog is large, so it is built here, when
+    -- jsonls first starts, not at every Neovim startup. pcall-guarded:
+    -- a missing plugin means "no catalog" (validation then only applies
+    -- where a file declares "$schema"), not an error.
+    before_init = function(_, config)
+      local ok, schemastore = pcall(require, "schemastore")
+      if ok then
+        config.settings.json.schemas = schemastore.json.schemas()
+      end
+    end,
   },
   -- XML / XSD / XSLT (installed via Mason as "lemminx"). Format settings
   -- carried over from the old LazyVim config: keep attribute layout as
