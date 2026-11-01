@@ -20,7 +20,6 @@ local ensure_installed = {
   -- Language servers
   "gopls", -- gopls
   "json-lsp", -- jsonls (vscode-json-language-server)
-  "lemminx", -- lemminx
   "lua-language-server", -- lua_ls
   "rust-analyzer", -- rust_analyzer
 

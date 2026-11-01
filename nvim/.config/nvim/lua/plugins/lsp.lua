@@ -79,23 +79,6 @@ local servers = {
       end
     end,
   },
-  -- XML / XSD / XSLT (installed via Mason as "lemminx"). Format settings
-  -- carried over from the old LazyVim config: keep attribute layout as
-  -- written and allow long lines instead of hard-wrapping at 80.
-  lemminx = {
-    cmd = { "lemminx" },
-    filetypes = { "xml", "xsd", "xslt", "svg" },
-    root_markers = { ".git" },
-    settings = {
-      xml = {
-        format = {
-          enabled = true,
-          splitAttributes = "preserve",
-          maxLineWidth = 280,
-        },
-      },
-    },
-  },
   lua_ls = {
     cmd = { "lua-language-server" },
     filetypes = { "lua" },
