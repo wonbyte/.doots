@@ -9,6 +9,7 @@ format = """
 $username\
 $hostname\
 $directory\
+$golang\
 $nodejs\
 $rust\
 $lua\
@@ -29,6 +30,12 @@ read_only = " "
 success_symbol = "[❯](purple)"
 error_symbol = "[❯](red)"
 vimcmd_symbol = "[❮](green)"
+
+[golang]
+symbol = "🐹 "
+detect_extensions = ["go"]
+detect_files = ["go.mod", "go.sum", "go.work"]
+detect_folders = []
 
 [nodejs]
 symbol = "⬢ "
