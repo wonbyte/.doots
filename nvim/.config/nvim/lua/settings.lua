@@ -38,17 +38,15 @@ vim.o.colorcolumn = "80"
 
 -- Route yank/delete to the system clipboard via the "+" register.
 --
--- Clipboard path (this is a tmux-only workflow): Neovim's provider autodetect
--- checks the $TMUX branch BEFORE OSC52, so inside tmux it selects the tmux
--- provider (`tmux load-buffer`). The actual hop to the system clipboard is done
--- by tmux, not Neovim -- `set-clipboard on` in tmux.conf forwards the tmux
--- buffer out to the terminal over OSC52 (allow-passthrough on lets it through).
+-- Clipboard path: Neovim's provider autodetect (provider/clipboard.vim)
+-- checks X11 tools BEFORE tmux. WSLg sets $DISPLAY, and xsel is on PATH,
+-- so Neovim selects the xsel provider (:checkhealth confirms "Clipboard
+-- tool found: xsel"). The $TMUX branch is only reached when no Wayland or
+-- X11 tool is found, and the OSC52 branch only when 'clipboard' is empty.
 --
--- Note: Neovim's own OSC52 provider is NOT used here. It is suppressed while
--- 'clipboard' is non-empty (see provider/clipboard.vim: OSC52 only auto-enables
--- when &clipboard is ''), so clipboard integration depends on always running
--- nvim inside tmux. Outside tmux on a headless host it would not work without
--- an explicit g:clipboard opt-in.
+-- If xsel is ever removed, the fallback inside tmux is the tmux provider
+-- (`tmux load-buffer`), which relies on `set-clipboard on` in tmux.conf to
+-- forward the buffer to the terminal over OSC52.
 vim.o.clipboard = "unnamedplus"
 
 -- Open splits to the right and below

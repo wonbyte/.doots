@@ -1,16 +1,14 @@
 -- Set blink.cmp capabilities for all LSP servers (deep-merged with per-server config)
+--
+-- No positionEncodings override: Neovim 0.12 already advertises
+-- { "utf-8", "utf-16", "utf-32" } with utf-8 first (see
+-- vim.lsp.protocol.make_client_capabilities). Servers that do not
+-- negotiate are handled per-server with offset_encoding below.
 vim.lsp.config("*", {
   capabilities = vim.tbl_deep_extend(
     "force",
     require("blink.cmp").get_lsp_capabilities(),
     {
-      general = {
-        -- Advertise UTF-8 as most preferred. Helps servers that implement
-        -- LSP 3.17 positionEncodings negotiation pick UTF-8 over the
-        -- spec default (UTF-16). Servers that don't negotiate are handled
-        -- per-server with offset_encoding overrides below.
-        positionEncodings = { "utf-8", "utf-16" },
-      },
       workspace = {
         -- Enable LSP file watching (workspace/didChangeWatchedFiles).
         -- Neovim disables this by default on Linux because its watcher
@@ -71,8 +69,8 @@ local servers = {
           shadow = true,
         },
         staticcheck = true,
-        -- gofumpt is a stricter superset of gofmt; set to true if you
-        -- use gofumpt, otherwise leave false to match conform's gofmt.
+        -- gofumpt is a stricter superset of gofmt. Left false so gopls
+        -- diagnostics match conform's goimports output (gofmt style).
         gofumpt = false,
         hints = {
           assignVariableTypes = true,
@@ -188,7 +186,7 @@ local servers = {
   -- written and allow long lines instead of hard-wrapping at 80.
   lemminx = {
     cmd = { "lemminx" },
-    filetypes = { "xml", "xsd", "xsl", "xslt", "svg" },
+    filetypes = { "xml", "xsd", "xslt", "svg" },
     root_markers = { ".git" },
     settings = {
       xml = {
