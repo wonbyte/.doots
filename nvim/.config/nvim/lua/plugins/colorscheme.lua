@@ -33,8 +33,9 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 
     -- Melange leaves BlinkCmpMenu/MenuBorder/Doc/DocBorder undefined
     -- (present but commented out in its source), so blink falls back to
-    -- its own defaults. Link them to the float groups above explicitly so the completion menu and docs match hover and
-    -- diagnostics rather than depending on blink's fallback chain.
+    -- its own defaults. Link them to the float groups above explicitly so
+    -- the completion menu and docs match hover and diagnostics rather than
+    -- depending on blink's fallback chain.
     vim.api.nvim_set_hl(0, "BlinkCmpMenu", { link = "NormalFloat" })
     vim.api.nvim_set_hl(0, "BlinkCmpMenuBorder", { link = "FloatBorder" })
     vim.api.nvim_set_hl(0, "BlinkCmpDoc", { link = "NormalFloat" })
@@ -50,7 +51,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
     -- gray (a.sel). If selections turn out to be too quiet, a loud option
     -- in this palette is its bright yellow:
     --   local b = palette.b
-    --   vim.api.nvim_set_hl(0, "Visual", { bg = b.yellow, fg = a.bg, bold = true })
+    --   vim.api.nvim_set_hl(0, "Visual", { bg = b.yellow, fg = a.bg })
   end,
 })
 

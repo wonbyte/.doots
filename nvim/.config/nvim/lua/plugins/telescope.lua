@@ -90,7 +90,7 @@ local function search_dotfiles()
       -- Use conf.file_sorter (the configured file sorter) rather than a hard
       -- coded sorters.get_fuzzy_file(). Because fzf-native overrides the file
       -- sorter, this routes the custom picker through the compiled native
-      -- sorter you built with `make`, instead of the pure-Lua fuzzy fallback.
+      -- sorter instead of the pure-Lua fuzzy fallback.
       sorter = conf.file_sorter(picker_opts),
     })
     :find()
@@ -106,9 +106,9 @@ local function live_multigrep()
         return nil
       end
 
-      -- Split on a DOUBLE space (two spaces), not one. Single spaces stay
-      -- part of the ripgrep pattern, so the UX is: <pattern><space><space><glob>.
-      -- If you type only one space, pieces[2] stays nil and no glob is applied.
+      -- Split on a DOUBLE space, not one. Single spaces stay part of the
+      -- ripgrep pattern, so the input is: <pattern><space><space><glob>.
+      -- With only one space, pieces[2] stays nil and no glob is applied.
       local pieces = vim.split(prompt, "  ")
       local args = { "rg" }
 
@@ -149,7 +149,8 @@ end
 
 telescope.setup(opts)
 
--- fzf-native is optional: it needs a compiled lib. Don't hard-crash startup if missing.
+-- fzf-native is optional (it needs a compiled lib), so a missing build
+-- must not crash startup.
 pcall(telescope.load_extension, "fzf")
 
 -- ============================================================================

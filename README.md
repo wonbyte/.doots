@@ -4,6 +4,8 @@ linux dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
 ### Install
 
+Needs [GNU Stow](https://www.gnu.org/software/stow/).
+
 ```sh
 git clone https://github.com/wonbyte/.doots ~/.doots
 cd ~/.doots

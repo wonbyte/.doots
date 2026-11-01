@@ -1,9 +1,9 @@
--- Set blink.cmp capabilities for all LSP servers (deep-merged with per-server config)
+-- Set blink.cmp capabilities for all LSP servers (deep-merged with each
+-- server's own config).
 --
 -- No positionEncodings override: Neovim 0.12 already advertises
 -- { "utf-8", "utf-16", "utf-32" } with utf-8 first (see
--- vim.lsp.protocol.make_client_capabilities). Servers that do not
--- negotiate are handled per-server with offset_encoding below.
+-- vim.lsp.protocol.make_client_capabilities).
 vim.lsp.config("*", {
   capabilities = vim.tbl_deep_extend(
     "force",
@@ -71,7 +71,7 @@ local servers = {
       },
     },
   },
-  -- JSON (installed via Mason as "json-lsp"; executable links as vscode-json-language-server)
+  -- JSON (Mason package "json-lsp"; binary: vscode-json-language-server)
   jsonls = {
     cmd = { "vscode-json-language-server", "--stdio" },
     filetypes = { "json", "jsonc" },
@@ -230,7 +230,8 @@ local servers = {
       -- return value to self.rpc with no nil check. error() gives a clear
       -- message here instead of a cryptic nil-index traceback later.
       if not bin then
-        local msg = "tsgo: no native tsgo or TypeScript 7+ tsc found upward from "
+        local msg = "tsgo: no native tsgo or TypeScript 7+ tsc found "
+          .. "upward from "
           .. start
         if skipped_old then
           msg = msg
@@ -342,11 +343,11 @@ local function on_lsp_attach(args)
   local client = vim.lsp.get_client_by_id(args.data.client_id)
 
   if client then
-    -- Disable built-in formatting for servers where Prettier (via conform) should
-    -- always win -- this is a deliberate belt-and-suspenders choice: conform's
-    -- lsp_format = "fallback" already prefers Prettier when it's available, but
-    -- this guarantees the LSP's own formatter never fires even if Prettier is
-    -- temporarily missing, rather than silently reformatting with different rules.
+    -- Disable built-in formatting for servers where Prettier (via conform)
+    -- should always win. conform's lsp_format = "fallback" already prefers
+    -- Prettier, but this guarantees the LSP's own formatter never fires,
+    -- even if Prettier is missing, so files are never reformatted with
+    -- different rules.
     if client.name == "tsgo" or client.name == "jsonls" then
       client.server_capabilities.documentFormattingProvider = false
       client.server_capabilities.documentRangeFormattingProvider = false

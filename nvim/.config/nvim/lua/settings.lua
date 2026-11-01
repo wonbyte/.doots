@@ -68,6 +68,5 @@ vim.o.shiftround = true -- Round indent to the nearest shiftwidth
 -- on 0.11+, so per-call border args are not needed elsewhere.
 vim.o.winborder = "rounded"
 
--- Hidden characters: off by default, toggled with <leader>,
-vim.o.list = false
+-- Hidden characters ('list' is off by default; toggle with <leader>,)
 vim.o.listchars = "tab:^ ,nbsp:¬,extends:»,precedes:«,trail:•,space:·"
