@@ -12,14 +12,8 @@ set -gx VISUAL nvim
 # Disable greeting
 set -g fish_greeting ""
 
-direnv hook fish | source
-
-# PATH (guard with existence checks to avoid dead entries)
-for p in $HOME/.local/bin $HOME/.cargo/bin $GOPATH/bin /usr/local/go/bin
-    if test -d $p
-        fish_add_path -g $p
-    end
-end
+# PATH. fish_add_path skips dirs that do not exist, so no guard is needed.
+fish_add_path -g $HOME/.local/bin $HOME/.cargo/bin $GOPATH/bin /usr/local/go/bin
 
 # Aliases (abbr in fish)
 abbr -a clr clear
@@ -27,7 +21,9 @@ abbr -a v nvim
 abbr -a vi nvim
 abbr -a vim nvim
 
-# Prompt (only in interactive shell)
+# Interactive-only hooks. Run after PATH is set so tools in ~/.local/bin
+# are found, and guarded so a missing tool does not print an error.
 if status is-interactive
-    starship init fish | source
+    command -q direnv; and direnv hook fish | source
+    command -q starship; and starship init fish | source
 end

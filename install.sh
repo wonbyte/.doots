@@ -1,42 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Folders to stow (each is symlinked into $HOME via GNU Stow).
-STOW_FOLDERS="bin,fish,nvim,starship,tmux"
+# Packages to stow. Each one is symlinked into $HOME via GNU Stow.
+folders=(bin fish nvim starship tmux)
 
-# Ensure required directories exist
-mkdir -p "${HOME}/.local" "${HOME}/.config"
+DOTFILES="${HOME}/.doots"
 
-# Check if the .doots directory exists before trying to enter it
-if [ ! -d "${HOME}/.doots" ]; then
-    echo "Error: ${HOME}/.doots directory does not exist."
+command -v stow >/dev/null || {
+    echo "Error: GNU Stow is not installed." >&2
+    exit 1
+}
+
+if [[ ! -d "$DOTFILES" ]]; then
+    echo "Error: $DOTFILES does not exist." >&2
     exit 1
 fi
 
-# Convert the comma-separated list into an array
-IFS=',' read -r -a folders <<< "$STOW_FOLDERS"
+# Make sure these exist as real directories, so Stow links the files
+# inside them instead of linking the whole directory.
+mkdir -p "${HOME}/.local/bin" "${HOME}/.config"
 
-# Move into the .doots directory
-pushd "${HOME}/.doots" >/dev/null || exit 1
+cd "$DOTFILES"
 
-# Unstow and then restow each folder
 for folder in "${folders[@]}"; do
-    if [ ! -d "$folder" ]; then
-        echo "Warning: Folder '$folder' does not exist in ${HOME}/.doots. Skipping."
+    if [[ ! -d "$folder" ]]; then
+        echo "Warning: '$folder' not found in $DOTFILES. Skipping." >&2
         continue
     fi
 
-    # Unstow (don't fail if nothing was previously stowed)
-    stow -D "$folder" || true
-
-    # Stow the current folder
-    if ! stow "$folder"; then
-        echo "Error: Failed to stow folder '$folder'."
-        exit 1
-    fi
+    # -R (restow) = unstow then stow, which also prunes stale links.
+    stow -R -t "$HOME" "$folder"
 done
-
-# Return to the original directory
-popd >/dev/null || exit 1
 
 echo "Stow operations completed successfully."

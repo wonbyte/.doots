@@ -129,7 +129,7 @@ local servers = {
     settings = {
       ["rust-analyzer"] = {
         cargo = { allFeatures = true },
-        -- The fix: 'checkOnSave' is implicitly true, just define the 'check' command
+        -- checkOnSave is on by default; run clippy instead of cargo check.
         check = { command = "clippy" },
         completion = { callable = { snippets = "add_parentheses" } },
       },

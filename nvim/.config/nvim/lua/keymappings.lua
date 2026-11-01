@@ -5,9 +5,6 @@ local keymap = vim.keymap.set
 -- ============================================================================
 
 -- Clear search highlighting on Escape.
--- <C-h> was the previous binding but it shadows the ASCII backspace code
--- (some terminals send <C-h> for <BS>) and blocks the common "navigate to
--- left split" convention if you ever add seamless tmux/split navigation.
 keymap("n", "<Esc>", "<cmd>noh<CR>", { desc = "Clear search highlight" })
 
 -- Toggle display of hidden characters
@@ -38,11 +35,9 @@ keymap("v", ">", ">gv", { desc = "Indent right and reselect" })
 -- DIFF
 -- ============================================================================
 
--- Toggle whitespace-insensitive diffing per session. This used to be a
--- global diffopt:append("iwhite") in settings.lua, which permanently hid
--- whitespace-only changes in every diff -- including real regressions.
--- Now the default diff shows everything and this opts INTO ignoring
--- whitespace when a noisy reindent-heavy diff calls for it.
+-- Toggle whitespace-insensitive diffing per session. Diffs show
+-- whitespace changes by default; this opts INTO ignoring them when a
+-- noisy reindent-heavy diff calls for it.
 keymap("n", "<leader>dw", function()
   local diffopt = vim.opt.diffopt:get()
   if vim.tbl_contains(diffopt, "iwhite") then

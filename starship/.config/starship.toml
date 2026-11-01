@@ -9,7 +9,6 @@ format = """
 $username\
 $hostname\
 $directory\
-$python\
 $nodejs\
 $rust\
 $lua\
@@ -30,12 +29,6 @@ read_only = " "
 success_symbol = "[❯](purple)"
 error_symbol = "[❯](red)"
 vimcmd_symbol = "[❮](green)"
-
-[python]
-symbol = "🐍 "
-detect_extensions = ["py"]
-detect_files = [".python-version", "Pipfile", "pyproject.toml", "requirements.txt", "setup.py", "tox.ini", "uv.lock"]
-detect_folders = ["__pycache__", ".venv", "venv"]
 
 [nodejs]
 symbol = "⬢ "
