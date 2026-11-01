@@ -15,8 +15,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
     -- require("melange/palettes/dark") or ".../light", keyed off
     -- 'background'. Doing it this way keeps the overrides correct for both
     -- variants and survives upstream palette adjustments.
-    local ok, palette =
-      pcall(require, "melange/palettes/" .. vim.o.background)
+    local ok, palette = pcall(require, "melange/palettes/" .. vim.o.background)
     if not ok then
       return
     end
@@ -41,6 +40,12 @@ vim.api.nvim_create_autocmd("ColorScheme", {
     vim.api.nvim_set_hl(0, "BlinkCmpMenuBorder", { link = "FloatBorder" })
     vim.api.nvim_set_hl(0, "BlinkCmpDoc", { link = "NormalFloat" })
     vim.api.nvim_set_hl(0, "BlinkCmpDocBorder", { link = "FloatBorder" })
+
+    -- Melange links MatchParen to Substitute (red background), so the
+    -- bracket under the cursor and its partner look like an error mark.
+    -- Use the subtle selection gray with bold text instead, so the pair
+    -- is still easy to see but does not look like a problem.
+    vim.api.nvim_set_hl(0, "MatchParen", { bg = a.sel, bold = true })
 
     -- NOTE: no Visual override. Gruvbox got a loud orange Visual
     -- (#fe8019); melange defines Visual as a subtle raised gray (a.sel).
