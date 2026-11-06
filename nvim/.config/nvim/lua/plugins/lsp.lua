@@ -57,7 +57,8 @@ local servers = {
     },
   },
   -- Java (Mason package "jdtls"; Mason puts its wrapper script on PATH).
-  -- Needs a Java 21+ runtime on PATH or in JAVA_HOME. nvim-jdtls is
+  -- Needs a Java 21+ runtime on PATH or in JAVA_HOME, and python3 (the
+  -- wrapper is a Python script). nvim-jdtls is
   -- pcall-guarded: a missing plugin means no jdt:// support, not a crash.
   jdtls = {
     cmd = function(dispatchers, config)
@@ -441,8 +442,8 @@ local function on_lsp_attach(args)
     if client.name == "jdtls" then
       local ok, jdtls = pcall(require, "jdtls")
       if ok then
-        local function map(mode, lhs, fn, desc)
-          vim.keymap.set(mode, lhs, fn, { buffer = bufnr, desc = desc })
+        local function map(mode, lhs, rhs, desc)
+          vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
         end
         map(
           "n",
@@ -456,15 +457,24 @@ local function on_lsp_attach(args)
           jdtls.extract_variable,
           "[Java] Extract variable"
         )
-        map("v", "<leader>cv", function()
-          jdtls.extract_variable(true)
-        end, "[Java] Extract variable")
-        map("v", "<leader>cm", function()
-          jdtls.extract_method(true)
-        end, "[Java] Extract method")
+        -- Visual maps press <Esc> first: nvim-jdtls reads the range from
+        -- the '< and '> marks, which Neovim only sets when visual mode
+        -- ends. A plain function callback would use the PREVIOUS
+        -- selection. (This matches the nvim-jdtls README.)
+        map(
+          "v",
+          "<leader>cv",
+          "<Esc><Cmd>lua require('jdtls').extract_variable({ visual = true })<CR>",
+          "[Java] Extract variable"
+        )
+        map(
+          "v",
+          "<leader>cm",
+          "<Esc><Cmd>lua require('jdtls').extract_method({ visual = true })<CR>",
+          "[Java] Extract method"
+        )
       end
     end
-
 
     -- Inlay hints are intentionally NOT auto-enabled here: they start off in
     -- every buffer. Toggle them on per buffer with <leader>h (see
