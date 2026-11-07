@@ -539,7 +539,8 @@ local function on_lsp_attach(args)
     { "n", "<leader>D", vim.lsp.buf.type_definition, "[LSP] Type definition" },
     { "n", "<leader>rn", vim.lsp.buf.rename, "[LSP] Rename symbol" },
     -- Run the code lens on this line (replaces the grx default, which the
-    -- nowait "gr" below makes unreachable). jdtls and gopls offer lenses.
+    -- nowait "gr" below makes unreachable). gopls offers lenses; jdtls only
+    -- does when java.referencesCodeLens / implementationCodeLens are on.
     { "n", "<leader>cl", vim.lsp.codelens.run, "[LSP] Run code lens" },
     {
       { "n", "v" },

@@ -21,8 +21,9 @@ require("conform").setup({
     -- With no .clang-format file, clang-format uses LLVM style, which
     -- indents with 2 spaces -- but C/C++ buffers here indent with 4 (see
     -- settings.lua). --fallback-style only takes a built-in style name, so
-    -- look for a config file ourselves and pass LLVM-with-4-spaces only
-    -- when there is none. A project's own .clang-format always wins.
+    -- look for a config file ourselves and, only when there is none, pass
+    -- LLVM style with the buffer's own indent width (ctx.shiftwidth). A
+    -- project's own .clang-format always wins.
     ["clang-format"] = {
       prepend_args = function(_, ctx)
         local config = vim.fs.find({ ".clang-format", "_clang-format" }, {
@@ -32,7 +33,8 @@ require("conform").setup({
         if config then
           return {}
         end
-        return { "--style={BasedOnStyle: LLVM, IndentWidth: 4}" }
+        local style = "{BasedOnStyle: LLVM, IndentWidth: %d}"
+        return { "--style=" .. style:format(ctx.shiftwidth) }
       end,
     },
   },
