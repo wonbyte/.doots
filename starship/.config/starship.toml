@@ -35,7 +35,8 @@ vimcmd_symbol = "[❮](green)"
 
 [c]
 symbol = "C "
-detect_extensions = ["c", "h"]
+# Not "h": C++ projects use .h headers too.
+detect_extensions = ["c"]
 detect_files = []
 detect_folders = []
 
@@ -47,6 +48,9 @@ detect_folders = []
 
 [java]
 symbol = "☕ "
+# Symbol only, no $version: reading the version starts a JVM on every
+# prompt (often 100-500 ms). Starship only runs it when $version is used.
+format = "[$symbol]($style) "
 detect_extensions = ["java"]
 detect_files = ["pom.xml", "build.gradle", "build.gradle.kts", ".java-version", ".sdkmanrc"]
 detect_folders = []

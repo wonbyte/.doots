@@ -28,6 +28,14 @@ vim.lsp.config("*", {
   ),
 })
 
+-- SchemaStore catalog, built once on first use (see jsonls below).
+-- nil = not built yet; false = plugin missing.
+local json_schemas
+
+-- tsgo: root dir -> the buffer that started it. root_dir records it so cmd
+-- can resolve TypeScript from that file (see tsgo below).
+local tsgo_start_buf = {}
+
 local servers = {
   -- C / C++ (Mason package "clangd"). clangd reads compile flags from
   -- compile_commands.json (CMake: -DCMAKE_EXPORT_COMPILE_COMMANDS=ON) or
@@ -172,14 +180,18 @@ local servers = {
     },
     -- JSON schemas from SchemaStore.nvim's bundled catalog, so jsonls
     -- matches files by name (package.json, tsconfig.json, ...) and
-    -- validates them. The catalog is large, so it is built here, when
-    -- jsonls first starts, not at every Neovim startup. pcall-guarded:
+    -- validates them. The catalog is large, so it is built once, when the
+    -- first jsonls client starts, not at every Neovim startup, and then
+    -- reused for every later client (one per project root). pcall-guarded:
     -- a missing plugin means "no catalog" (validation then only applies
     -- where a file declares "$schema"), not an error.
     before_init = function(_, config)
-      local ok, schemastore = pcall(require, "schemastore")
-      if ok then
-        config.settings.json.schemas = schemastore.json.schemas()
+      if json_schemas == nil then
+        local ok, schemastore = pcall(require, "schemastore")
+        json_schemas = ok and schemastore.json.schemas() or false
+      end
+      if json_schemas then
+        config.settings.json.schemas = json_schemas
       end
     end,
   },
@@ -237,10 +249,16 @@ local servers = {
     -- start, so each project uses the version it pins. When cmd is a
     -- function it must start the RPC client itself via vim.lsp.rpc.start().
     cmd = function(dispatchers, config)
-      -- Resolve from the buffer being edited, not config.root_dir or cwd:
-      -- both proved unreliable at cmd-invocation time. Walking upward from
-      -- the actual file is independent of both.
-      local bufname = vim.api.nvim_buf_get_name(0)
+      -- Resolve from the file that started this client, not from the root:
+      -- in a monorepo the root can be the .git dir above the package, so
+      -- an upward search from the root would miss the package's own
+      -- node_modules. root_dir below records that buffer per root. The
+      -- current buffer is only a fallback.
+      local bufnr = tsgo_start_buf[config.root_dir]
+      if not (bufnr and vim.api.nvim_buf_is_valid(bufnr)) then
+        bufnr = 0
+      end
+      local bufname = vim.api.nvim_buf_get_name(bufnr)
       local start = (bufname ~= "") and vim.fs.dirname(bufname) or vim.uv.cwd()
 
       -- Returns the major version number (7, 5, ...) from a version string
@@ -309,10 +327,13 @@ local servers = {
           -- Global tsgo is always native.
           bin = "tsgo"
         elseif vim.fn.executable("tsc") == 1 then
-          -- Global tsc may also be old 5.x. Ask it for its version.
-          -- Output looks like "Version 7.0.1".
-          local res = vim.system({ "tsc", "--version" }, { text = true }):wait()
-          local v = major(res.stdout)
+          -- Global tsc may also be old 5.x. Read the version from its
+          -- package.json instead of running `tsc --version`, which would
+          -- block the editor while Node starts. A global install links
+          -- tsc to <node_modules>/typescript/bin/tsc.
+          local real = vim.uv.fs_realpath(vim.fn.exepath("tsc"))
+          local v = real
+            and ts_major(vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(real))))
           if v and v >= 7 then
             bin = "tsc"
           else
@@ -365,6 +386,7 @@ local servers = {
       -- Only start when we have a real root. If nil, we don't call on_dir, so
       -- the server does not attach for this buffer instead of crashing.
       if root then
+        tsgo_start_buf[root] = bufnr
         on_dir(root)
       end
     end,

@@ -37,10 +37,23 @@ require("lualine").setup({
 })
 
 -- lualine only redraws on its own timer and on cursor/mode events, so
--- progress messages would lag. Refresh as each one arrives.
+-- progress messages would lag. Refresh when they arrive, but at most once
+-- per 100ms: jdtls can send many progress messages per second while it
+-- imports a project. The refresh reads the newest status when it runs, so
+-- no message is shown late.
+local progress_timer = assert(vim.uv.new_timer())
 vim.api.nvim_create_autocmd("LspProgress", {
   group = vim.api.nvim_create_augroup("LualineLspProgress", { clear = true }),
   callback = function()
-    require("lualine").refresh()
+    if progress_timer:is_active() then
+      return
+    end
+    progress_timer:start(
+      100,
+      0,
+      vim.schedule_wrap(function()
+        require("lualine").refresh()
+      end)
+    )
   end,
 })
