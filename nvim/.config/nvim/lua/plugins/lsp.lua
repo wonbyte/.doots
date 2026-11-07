@@ -72,8 +72,8 @@ local servers = {
   },
   -- Java (Mason package "jdtls"; Mason puts its wrapper script on PATH).
   -- Needs a Java 21+ runtime on PATH or in JAVA_HOME, and python3 (the
-  -- wrapper is a Python script). nvim-jdtls is
-  -- pcall-guarded: a missing plugin means no jdt:// support, not a crash.
+  -- wrapper is a Python script). nvim-jdtls is pcall-guarded: a missing
+  -- plugin means no jdt:// support, not a crash.
   jdtls = {
     cmd = function(dispatchers, config)
       local root = config.root_dir or vim.uv.cwd()
@@ -107,8 +107,9 @@ local servers = {
       return vim.lsp.rpc.start(cmd, dispatchers, { cwd = root })
     end,
     filetypes = { "java" },
-    -- First group wins first: wrapper scripts / .git mark the OUTER root of a
-    -- multi-module Maven/Gradle build, so submodules share one server.
+    -- The first group is tried first: wrapper scripts / .git mark the OUTER
+    -- root of a multi-module Maven/Gradle build, so submodules share one
+    -- server. The second group is only used when none of those exist.
     root_markers = {
       { "mvnw", "gradlew", "settings.gradle", "settings.gradle.kts", ".git" },
       { "pom.xml", "build.gradle", "build.gradle.kts", "build.xml" },

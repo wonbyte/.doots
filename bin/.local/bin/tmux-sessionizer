@@ -50,7 +50,9 @@ main() {
     [[ -z "$selected" ]] && exit 0
 
     # tmux session names cannot contain "." or ":".
+    # '\\' is tr's escape for one backslash, not a quote (SC1003).
     local name
+    # shellcheck disable=SC1003
     name="$(basename "$selected" | tr ' .:/\\' '_____')"
 
     if [[ -z "${TMUX:-}" ]]; then
