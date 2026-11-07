@@ -64,11 +64,16 @@ local function search_dotfiles()
 
   local finder = finders.new_async_job({
     command_generator = function(prompt)
+      -- --hidden also lists everything inside .git/ (most of the results
+      -- in this repo), so skip .git in ripgrep itself instead of making
+      -- telescope filter it out afterwards.
       local args = {
         "rg",
         "--files",
         "--hidden",
         "--follow",
+        "--glob",
+        "!.git",
       }
 
       -- Match files based on user input (as a glob)
