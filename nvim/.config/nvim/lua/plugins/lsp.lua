@@ -454,6 +454,13 @@ local function on_lsp_attach(args)
     -- lsp_format = "fallback" hands it to jdtls's Eclipse formatter, which
     -- picks up shiftwidth/expandtab from the formatting request.
     if client.name == "jdtls" then
+      -- Turn off jdtls semantic tokens. They are drawn ON TOP of
+      -- Tree-sitter, and after an edit jdtls can send tokens for the old
+      -- text. Those tokens then land on the wrong columns, so random words
+      -- inside a Javadoc get parameter (white) or enum-constant (purple)
+      -- colors. Tree-sitter already highlights Java fully, so nothing is
+      -- lost except a few extras (for example bold parameters).
+      client.server_capabilities.semanticTokensProvider = nil
       local ok, jdtls = pcall(require, "jdtls")
       if ok then
         local function map(mode, lhs, rhs, desc)

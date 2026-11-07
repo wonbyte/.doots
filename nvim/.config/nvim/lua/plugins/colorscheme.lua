@@ -47,10 +47,23 @@ vim.api.nvim_create_autocmd("ColorScheme", {
     -- is still easy to see but does not look like a problem.
     vim.api.nvim_set_hl(0, "MatchParen", { bg = a.sel, bold = true })
 
+    -- Melange gives the Spell* groups a foreground color (SpellBad red,
+    -- SpellLocal orange, ...). With 'spell' on in code buffers (see
+    -- aucommands.lua), any flagged word in a comment -- "UUIDv7",
+    -- "Idempotency" -- is repainted in that color, so comments look like
+    -- broken syntax highlighting. Keep only the undercurl and move the
+    -- color to `sp` (the undercurl color), so the word keeps its comment
+    -- color and only gets a colored squiggle under it.
+    local c = palette.c
+    local b = palette.b
+    vim.api.nvim_set_hl(0, "SpellBad", { sp = c.red, undercurl = true })
+    vim.api.nvim_set_hl(0, "SpellCap", { sp = c.blue, undercurl = true })
+    vim.api.nvim_set_hl(0, "SpellLocal", { sp = c.yellow, undercurl = true })
+    vim.api.nvim_set_hl(0, "SpellRare", { sp = b.yellow, undercurl = true })
+
     -- NOTE: no Visual override. Melange defines Visual as a subtle raised
     -- gray (a.sel). If selections turn out to be too quiet, a loud option
-    -- in this palette is its bright yellow:
-    --   local b = palette.b
+    -- in this palette is its bright yellow (`b` is defined above):
     --   vim.api.nvim_set_hl(0, "Visual", { bg = b.yellow, fg = a.bg })
   end,
 })
