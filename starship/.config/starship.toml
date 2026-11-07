@@ -10,6 +10,7 @@ $username\
 $hostname\
 $directory\
 $golang\
+$java\
 $nodejs\
 $rust\
 $lua\
@@ -35,6 +36,12 @@ vimcmd_symbol = "[❮](green)"
 symbol = "🐹 "
 detect_extensions = ["go"]
 detect_files = ["go.mod", "go.sum", "go.work"]
+detect_folders = []
+
+[java]
+symbol = "☕ "
+detect_extensions = ["java"]
+detect_files = ["pom.xml", "build.gradle", "build.gradle.kts", ".java-version", ".sdkmanrc"]
 detect_folders = []
 
 [nodejs]
