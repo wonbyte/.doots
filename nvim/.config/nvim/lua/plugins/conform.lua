@@ -1,6 +1,8 @@
 require("conform").setup({
   formatters_by_ft = {
     astro = { "prettier" },
+    c = { "clang-format" },
+    cpp = { "clang-format" },
     css = { "prettier" },
     -- goimports fixes imports AND formats in gofmt style, so a separate
     -- gofmt pass is redundant.

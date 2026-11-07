@@ -18,6 +18,7 @@ require("mason").setup({})
 -- exception -- it comes from rustup so it always matches the toolchain.
 local ensure_installed = {
   -- Language servers
+  "clangd", -- clangd
   "gopls", -- gopls
   "jdtls", -- jdtls
   "json-lsp", -- jsonls (vscode-json-language-server)
@@ -26,6 +27,7 @@ local ensure_installed = {
   "rust-analyzer", -- rust_analyzer
 
   -- Formatters (see conform.lua)
+  "clang-format", -- c, cpp
   "goimports", -- go
   "prettier", -- web filetypes, json
   "stylua", -- lua
