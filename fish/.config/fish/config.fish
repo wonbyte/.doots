@@ -13,7 +13,7 @@ set -gx VISUAL nvim
 set -g fish_greeting ""
 
 # PATH. fish_add_path skips dirs that do not exist, so no guard is needed.
-fish_add_path -g $HOME/.local/bin $HOME/.cargo/bin $GOPATH/bin /usr/local/go/bin
+fish_add_path -g $HOME/.local/bin $HOME/.cargo/bin $GOPATH/bin /usr/local/go/bin /opt/nvim/bin
 
 # Aliases (abbr in fish)
 abbr -a clr clear
