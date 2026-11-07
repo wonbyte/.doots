@@ -317,7 +317,7 @@ local servers = {
             break
           end
           skipped_old = skipped_old
-            or (tsc .. " (TypeScript " .. tostring(v) .. ")")
+            or (tsc .. " (TypeScript " .. (v or "unknown version") .. ")")
         end
       end
 
@@ -338,7 +338,7 @@ local servers = {
             bin = "tsc"
           else
             skipped_old = skipped_old
-              or ("global tsc (TypeScript " .. tostring(v) .. ")")
+              or ("global tsc (TypeScript " .. (v or "unknown version") .. ")")
           end
         end
       end

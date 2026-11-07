@@ -50,7 +50,7 @@ detect_folders = []
 symbol = "☕ "
 # Symbol only, no $version: reading the version starts a JVM on every
 # prompt (often 100-500 ms). Starship only runs it when $version is used.
-format = "[$symbol]($style) "
+format = "via [$symbol]($style)"
 detect_extensions = ["java"]
 detect_files = ["pom.xml", "build.gradle", "build.gradle.kts", ".java-version", ".sdkmanrc"]
 detect_folders = []
