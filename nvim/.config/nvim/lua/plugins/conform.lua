@@ -17,6 +17,25 @@ require("conform").setup({
     typescript = { "prettier" },
     typescriptreact = { "prettier" },
   },
+  formatters = {
+    -- With no .clang-format file, clang-format uses LLVM style, which
+    -- indents with 2 spaces -- but C/C++ buffers here indent with 4 (see
+    -- settings.lua). --fallback-style only takes a built-in style name, so
+    -- look for a config file ourselves and pass LLVM-with-4-spaces only
+    -- when there is none. A project's own .clang-format always wins.
+    ["clang-format"] = {
+      prepend_args = function(_, ctx)
+        local config = vim.fs.find({ ".clang-format", "_clang-format" }, {
+          upward = true,
+          path = ctx.dirname,
+        })[1]
+        if config then
+          return {}
+        end
+        return { "--style={BasedOnStyle: LLVM, IndentWidth: 4}" }
+      end,
+    },
+  },
   default_format_opts = {
     lsp_format = "fallback",
   },
