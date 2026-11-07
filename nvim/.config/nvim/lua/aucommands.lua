@@ -101,8 +101,6 @@ autocmd("FileType", {
 })
 
 -- Briefly highlight yanked text.
--- vim.hl.on_yank is the 0.12 API. Nightly (0.13) renames it to vim.hl.hl_op
--- and adds a TextPutPost event; revisit when upgrading.
 autocmd("TextYankPost", {
   group = augroup("YankHighlight", { clear = true }),
   desc = "Highlight yanked text briefly",

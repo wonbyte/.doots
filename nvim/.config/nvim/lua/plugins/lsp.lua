@@ -416,8 +416,8 @@ vim.diagnostic.config({
     source = "if_many",
   },
   -- Show the diagnostic float after every jump. This replaces the old
-  -- vim.diagnostic.jump({ float = true }), which 0.12 deprecates (removal in
-  -- 0.14) in favor of an on_jump callback. Setting it here, as the jump
+  -- vim.diagnostic.jump({ float = true }), which 0.12 deprecates in favor
+  -- of an on_jump callback. Setting it here, as the jump
   -- default, means Neovim's built-in [d / ]d / [D / ]D all open the float --
   -- so no custom jump mappings are needed (see on_lsp_attach). The body
   -- mirrors exactly what 0.12 itself builds from the deprecated
@@ -461,7 +461,9 @@ local function on_lsp_attach(args)
       -- inside a Javadoc get parameter (white) or enum-constant (purple)
       -- colors. Tree-sitter already highlights Java fully, so nothing is
       -- lost except a few extras (for example bold parameters).
-      client.server_capabilities.semanticTokensProvider = nil
+      -- vim.lsp.semantic_tokens.enable() is the 0.12 API; Neovim starts
+      -- tokens in a vim.schedule() after LspAttach, so this runs in time.
+      vim.lsp.semantic_tokens.enable(false, { client_id = client.id })
       local ok, jdtls = pcall(require, "jdtls")
       if ok then
         local function map(mode, lhs, rhs, desc)
@@ -536,6 +538,9 @@ local function on_lsp_attach(args)
     },
     { "n", "<leader>D", vim.lsp.buf.type_definition, "[LSP] Type definition" },
     { "n", "<leader>rn", vim.lsp.buf.rename, "[LSP] Rename symbol" },
+    -- Run the code lens on this line (replaces the grx default, which the
+    -- nowait "gr" below makes unreachable). jdtls and gopls offer lenses.
+    { "n", "<leader>cl", vim.lsp.codelens.run, "[LSP] Run code lens" },
     {
       { "n", "v" },
       "<leader>ca",
@@ -548,16 +553,16 @@ local function on_lsp_attach(args)
   }
 
   for _, km in ipairs(keymaps) do
-    -- nowait: Neovim 0.11+ ships global gr* defaults (grn, grr, gra, gri,
-    -- grt). Our buffer-local "gr" is a prefix of all of them, so without
-    -- nowait every press of gr would sit out 'timeoutlen' (300ms) waiting
-    -- to see whether a longer mapping was being typed.
+    -- nowait: Neovim 0.12 ships global gr* defaults (grn, grr, gra, gri,
+    -- grt, grx). Our buffer-local "gr" is a prefix of all of them, so
+    -- without nowait every press of gr would sit out 'timeoutlen' (300ms)
+    -- waiting to see whether a longer mapping was being typed.
     --
     -- The flip side: once gr fires instantly, the gr* defaults become
     -- unreachable in LSP buffers. That is fine because every one of them
     -- has a local equivalent -- grn -> <leader>rn, grr -> gr, gra ->
-    -- <leader>ca, gri -> gI, grt -> <leader>D. If a new gr* default ever
-    -- appears upstream, it needs a mapping here too.
+    -- <leader>ca, gri -> gI, grt -> <leader>D, grx -> <leader>cl. If a new
+    -- gr* default ever appears upstream, it needs a mapping here too.
     vim.keymap.set(
       km[1],
       km[2],
