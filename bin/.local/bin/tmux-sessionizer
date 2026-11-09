@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#
+# Open (or switch to) a tmux session for a project directory.
+#
+# Usage: tmux-sessionizer [dir]
+#   dir: a path, or a folder name under $CODE_DIR.
+#        If omitted, pick one from $CODE_DIR with fzf.
+
+set -euo pipefail
+
+CODE_DIR="${CODE_DIR:-$HOME/code}"
+
+die() {
+    echo "Error: $*" >&2
+    exit 1
+}
+
+resolve_directory_arg() {
+    local arg="$1"
+
+    if [[ -d "$arg" ]]; then
+        printf '%s\n' "$arg"
+    elif [[ -d "$CODE_DIR/$arg" ]]; then
+        printf '%s\n' "$CODE_DIR/$arg"
+    else
+        die "directory not found: $arg"
+    fi
+}
+
+select_directory() {
+    if [[ $# -gt 1 ]]; then
+        die "too many arguments (usage: tmux-sessionizer [dir])"
+    elif [[ $# -eq 1 ]]; then
+        resolve_directory_arg "$1"
+    else
+        command -v fzf >/dev/null \
+            || die "no directory given and fzf is not installed"
+        [[ -d "$CODE_DIR" ]] \
+            || die "$CODE_DIR does not exist. Create it or set CODE_DIR."
+        # fzf exits non-zero when cancelled; treat that as "no selection".
+        find "$CODE_DIR" -mindepth 1 -maxdepth 1 -type d | sort | fzf || true
+    fi
+}
+
+main() {
+    command -v tmux >/dev/null || die "tmux is not installed"
+
+    local selected
+    selected="$(select_directory "$@")"
+    [[ -z "$selected" ]] && exit 0
+
+    # tmux session names cannot contain "." or ":".
+    # '\\' is tr's escape for one backslash, not a quote (SC1003).
+    local name
+    # shellcheck disable=SC1003
+    name="$(basename "$selected" | tr ' .:/\\' '_____')"
+
+    if [[ -z "${TMUX:-}" ]]; then
+        exec tmux new-session -A -s "$name" -c "$selected"
+    fi
+
+    # "=" forces an exact name match (no prefix matching).
+    if ! tmux has-session -t "=$name" 2>/dev/null; then
+        tmux new-session -d -s "$name" -c "$selected"
+    fi
+    tmux switch-client -t "=$name"
+}
+
+main "$@"
