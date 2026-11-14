@@ -340,7 +340,7 @@ local servers = {
           msg = msg
             .. "; skipped old "
             .. skipped_old
-            .. ". Fix: npm install -D @typescript/native-preview"
+            .. ". Fix: npm install -D typescript@latest (7+)"
         end
         error(msg)
       end
