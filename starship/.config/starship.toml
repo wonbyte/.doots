@@ -9,7 +9,6 @@ format = """
 $username\
 $hostname\
 $directory\
-$c\
 $golang\
 $java\
 $nodejs\
@@ -32,13 +31,6 @@ read_only = " "
 success_symbol = "[❯](purple)"
 error_symbol = "[❯](red)"
 vimcmd_symbol = "[❮](green)"
-
-[c]
-symbol = "C "
-# Not "h": C++ projects use .h headers too.
-detect_extensions = ["c"]
-detect_files = []
-detect_folders = []
 
 [golang]
 symbol = "🐹 "

@@ -1,8 +1,6 @@
 require("conform").setup({
   formatters_by_ft = {
     astro = { "prettier" },
-    c = { "clang-format" },
-    cpp = { "clang-format" },
     css = { "prettier" },
     -- goimports fixes imports AND formats in gofmt style, so a separate
     -- gofmt pass is redundant.
@@ -16,27 +14,6 @@ require("conform").setup({
     rust = { "rustfmt" },
     typescript = { "prettier" },
     typescriptreact = { "prettier" },
-  },
-  formatters = {
-    -- With no .clang-format file, clang-format uses LLVM style, which
-    -- indents with 2 spaces -- but C/C++ buffers here indent with 4 (see
-    -- settings.lua). --fallback-style only takes a built-in style name, so
-    -- look for a config file ourselves and, only when there is none, pass
-    -- LLVM style with the buffer's own indent width (ctx.shiftwidth). A
-    -- project's own .clang-format always wins.
-    ["clang-format"] = {
-      prepend_args = function(_, ctx)
-        local config = vim.fs.find({ ".clang-format", "_clang-format" }, {
-          upward = true,
-          path = ctx.dirname,
-        })[1]
-        if config then
-          return {}
-        end
-        local style = "{BasedOnStyle: LLVM, IndentWidth: %d}"
-        return { "--style=" .. style:format(ctx.shiftwidth) }
-      end,
-    },
   },
   default_format_opts = {
     lsp_format = "fallback",
