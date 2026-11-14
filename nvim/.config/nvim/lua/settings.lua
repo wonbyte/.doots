@@ -70,3 +70,8 @@ vim.o.winborder = "rounded"
 
 -- Hidden characters ('list' is off by default; toggle with <leader>,)
 vim.o.listchars = "tab:^ ,nbsp:¬,extends:»,precedes:«,trail:•,space:·"
+
+-- Write into the existing file on save, not rename-and-replace. The
+-- rename made the LSP file watcher report open files as deleted, and
+-- jdtls then closed its copy and formatted stale text.
+vim.o.backupcopy = "yes"
