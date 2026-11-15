@@ -595,14 +595,18 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- outside the default search path. Without DOTNET_ROOT the server's launcher
 -- cannot find the runtime and quits. config.fish sets it too; this covers
 -- Neovim started from a shell (or a long-running tmux server) that does not
--- have it yet. A distro package is in a default location and needs nothing.
+-- have it yet. A distro package registers its own location (in
+-- /etc/dotnet/install_location) and needs nothing.
 local home_dotnet = vim.env.HOME .. "/.dotnet"
 if not vim.env.DOTNET_ROOT and vim.uv.fs_stat(home_dotnet .. "/dotnet") then
   vim.env.DOTNET_ROOT = home_dotnet
 end
 
-local lspconfig = vim.pack.get({ "nvim-lspconfig" }, { info = false })[1]
-local roslyn_path = lspconfig and (lspconfig.path .. "/lsp/roslyn_ls.lua")
+-- pcall: vim.pack.get() throws when the plugin is not installed (for
+-- example a first start with no network). That must only cost C# support,
+-- not stop every server below from being set up.
+local ok, plugs = pcall(vim.pack.get, { "nvim-lspconfig" }, { info = false })
+local roslyn_path = ok and plugs[1] and (plugs[1].path .. "/lsp/roslyn_ls.lua")
 if roslyn_path and vim.uv.fs_stat(roslyn_path) then
   servers.roslyn_ls = dofile(roslyn_path)
 end
