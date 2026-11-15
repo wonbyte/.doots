@@ -82,6 +82,7 @@ autocmd("FileType", {
 autocmd("FileType", {
   group = augroup("CodeSpell", { clear = true }),
   pattern = {
+    "cs",
     "go",
     "java",
     "javascript",

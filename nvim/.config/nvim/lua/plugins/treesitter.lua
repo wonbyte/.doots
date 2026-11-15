@@ -37,6 +37,7 @@ vim.api.nvim_create_autocmd("FileType", {
 -- satisfied. No need to diff against get_installed() ourselves.
 local ensure_installed = {
   "bash",
+  "c_sharp",
   "css",
   "diff",
   "dockerfile",

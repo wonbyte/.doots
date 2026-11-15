@@ -15,6 +15,16 @@ set -g fish_greeting ""
 # PATH. fish_add_path skips dirs that do not exist, so no guard is needed.
 fish_add_path -g $HOME/.local/bin $HOME/.cargo/bin $GOPATH/bin /usr/local/go/bin /opt/nvim/bin
 
+# .NET. ~/.dotnet/tools holds global tools for every install method. An SDK
+# installed with dotnet-install.sh lives in ~/.dotnet, which is not a default
+# location, so tools need DOTNET_ROOT to find it. A distro package needs
+# neither (and must not get DOTNET_ROOT), so check for the binary itself.
+if test -x $HOME/.dotnet/dotnet
+    set -gx DOTNET_ROOT $HOME/.dotnet
+    fish_add_path -g $HOME/.dotnet
+end
+fish_add_path -g $HOME/.dotnet/tools
+
 # Aliases (abbr in fish)
 abbr -a clr clear
 abbr -a v nvim

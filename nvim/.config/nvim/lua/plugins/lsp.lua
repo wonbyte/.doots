@@ -590,3 +590,23 @@ for server_name, server_config in pairs(servers) do
   vim.lsp.config(server_name, server_config)
   vim.lsp.enable(server_name)
 end
+
+-- C# / .NET. Not in the table above: roslyn.nvim provides the whole config
+-- (cmd, filetypes, solution-aware root_dir) in its own lsp/roslyn.lua and
+-- calls vim.lsp.enable("roslyn") itself, so only settings are merged in
+-- here. No formatter is set in conform for C#, so lsp_format = "fallback"
+-- hands formatting to Roslyn, which follows the project's .editorconfig.
+vim.lsp.config("roslyn", {
+  settings = {
+    -- Which hints the server sends; rendering is still gated by the
+    -- <leader>h toggle, same as the other servers.
+    ["csharp|inlay_hints"] = {
+      csharp_enable_inlay_hints_for_types = true,
+      csharp_enable_inlay_hints_for_implicit_variable_types = true,
+      csharp_enable_inlay_hints_for_lambda_parameter_types = true,
+      csharp_enable_inlay_hints_for_implicit_object_creation = true,
+      dotnet_enable_inlay_hints_for_parameters = true,
+      dotnet_enable_inlay_hints_for_literal_parameters = true,
+    },
+  },
+})

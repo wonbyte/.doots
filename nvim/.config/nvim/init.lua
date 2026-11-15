@@ -110,6 +110,11 @@ vim.pack.add({
   -- is installed by Mason and started by vim.lsp.config in plugins/lsp.lua.
   "https://github.com/mfussenegger/nvim-jdtls",
 
+  -- C# / .NET. Ships the "roslyn" LSP config (lsp/roslyn.lua) and enables it
+  -- itself; settings are added in plugins/lsp.lua. The server is installed
+  -- by Mason (see plugins/mason.lua) and needs the .NET SDK 10+ on PATH.
+  "https://github.com/seblyng/roslyn.nvim",
+
   -- JSON schema catalog for jsonls. Pure data plugin (a Lua table mapping
   -- well-known filenames like package.json / tsconfig.json to their
   -- schemas). Without it, jsonls validation only applies to files that
