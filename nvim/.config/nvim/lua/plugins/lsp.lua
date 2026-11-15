@@ -586,27 +586,28 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = on_lsp_attach,
 })
 
+-- C# (Roslyn). The server needs a lot of custom client code, so use the
+-- maintained config from nvim-lspconfig instead of a copy. See init.lua for
+-- why the file is read from disk. No formatter is set in conform for C#, so
+-- lsp_format = "fallback" hands formatting to Roslyn (.editorconfig).
+--
+-- A .NET SDK installed with dotnet-install.sh lives in ~/.dotnet, which is
+-- outside the default search path. Without DOTNET_ROOT the server's launcher
+-- cannot find the runtime and quits. config.fish sets it too; this covers
+-- Neovim started from a shell (or a long-running tmux server) that does not
+-- have it yet. A distro package is in a default location and needs nothing.
+local home_dotnet = vim.env.HOME .. "/.dotnet"
+if not vim.env.DOTNET_ROOT and vim.uv.fs_stat(home_dotnet .. "/dotnet") then
+  vim.env.DOTNET_ROOT = home_dotnet
+end
+
+local lspconfig = vim.pack.get({ "nvim-lspconfig" }, { info = false })[1]
+local roslyn_path = lspconfig and (lspconfig.path .. "/lsp/roslyn_ls.lua")
+if roslyn_path and vim.uv.fs_stat(roslyn_path) then
+  servers.roslyn_ls = dofile(roslyn_path)
+end
+
 for server_name, server_config in pairs(servers) do
   vim.lsp.config(server_name, server_config)
   vim.lsp.enable(server_name)
 end
-
--- C# / .NET. Not in the table above: roslyn.nvim provides the whole config
--- (cmd, filetypes, solution-aware root_dir) in its own lsp/roslyn.lua and
--- calls vim.lsp.enable("roslyn") itself, so only settings are merged in
--- here. No formatter is set in conform for C#, so lsp_format = "fallback"
--- hands formatting to Roslyn, which follows the project's .editorconfig.
-vim.lsp.config("roslyn", {
-  settings = {
-    -- Which hints the server sends; rendering is still gated by the
-    -- <leader>h toggle, same as the other servers.
-    ["csharp|inlay_hints"] = {
-      csharp_enable_inlay_hints_for_types = true,
-      csharp_enable_inlay_hints_for_implicit_variable_types = true,
-      csharp_enable_inlay_hints_for_lambda_parameter_types = true,
-      csharp_enable_inlay_hints_for_implicit_object_creation = true,
-      dotnet_enable_inlay_hints_for_parameters = true,
-      dotnet_enable_inlay_hints_for_literal_parameters = true,
-    },
-  },
-})

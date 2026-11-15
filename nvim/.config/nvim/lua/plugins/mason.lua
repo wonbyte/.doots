@@ -1,17 +1,6 @@
 -- setup() prepends Mason's bin dir to PATH and sets $MASON, so servers in
 -- plugins/lsp.lua can use plain executable names ("gopls", ...).
---
--- The second registry is only for the "roslyn" package (the C# language
--- server), as roslyn.nvim's README recommends: it tracks the version that
--- VS Code ships. The official registry's "roslyn-language-server" package
--- comes from nuget.org and lags behind -- at the time of writing it was
--- older than the minimum version roslyn.nvim requires.
-require("mason").setup({
-  registries = {
-    "github:mason-org/mason-registry",
-    "github:Crashdummyy/mason-registry",
-  },
-})
+require("mason").setup({})
 
 -- Mason packages to keep installed. mason.nvim has no ensure_installed
 -- option of its own, so this uses its registry API directly: refresh the
@@ -34,7 +23,7 @@ local ensure_installed = {
   "json-lsp", -- jsonls (vscode-json-language-server)
   "lemminx", -- lemminx
   "lua-language-server", -- lua_ls
-  "roslyn", -- roslyn (C#; from the Crashdummyy registry, see above)
+  "roslyn-language-server", -- roslyn_ls (C#)
   "rust-analyzer", -- rust_analyzer
 
   -- Formatters (see conform.lua)
@@ -43,11 +32,19 @@ local ensure_installed = {
   "stylua", -- lua
 }
 
+-- Tool Mason needs on PATH to install a package. A package is skipped while
+-- its tool is missing, so Mason does not fail and retry on every start.
+local requires = {
+  ["roslyn-language-server"] = "dotnet",
+}
+
 local registry = require("mason-registry")
 registry.refresh(function()
   for _, name in ipairs(ensure_installed) do
+    local tool = requires[name]
+    local can_install = not tool or vim.fn.executable(tool) == 1
     local ok, pkg = pcall(registry.get_package, name)
-    if ok and not pkg:is_installed() then
+    if can_install and ok and not pkg:is_installed() then
       vim.notify("mason: installing " .. name, vim.log.levels.INFO)
       pkg:install()
     end
