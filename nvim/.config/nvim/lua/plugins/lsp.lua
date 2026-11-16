@@ -609,6 +609,11 @@ local ok, plugs = pcall(vim.pack.get, { "nvim-lspconfig" }, { info = false })
 local roslyn_path = ok and plugs[1] and (plugs[1].path .. "/lsp/roslyn_ls.lua")
 if roslyn_path and vim.uv.fs_stat(roslyn_path) then
   servers.roslyn_ls = dofile(roslyn_path)
+  -- Drop nvim-lspconfig's before_init. It only runs
+  -- `roslyn-language-server --version` to warn about servers older than
+  -- 5.8.0 (no --autoLoadProjects). Mason installs a newer one, so the check
+  -- always passes and just costs one extra .NET start per server start.
+  servers.roslyn_ls.before_init = nil
 end
 
 for server_name, server_config in pairs(servers) do
