@@ -19,11 +19,19 @@ local ts = require("nvim-treesitter")
 -- vim.treesitter.start() errors if no parser exists for the buffer's
 -- language, so it is wrapped in pcall. indentexpr is only set when Tree-sitter
 -- actually started, leaving the filetype's default indent in place otherwise.
+--
+-- It is also only set when the language has an "indents" query. Some
+-- parsers ship none (c_sharp, dockerfile, vim, ...); for those the
+-- Tree-sitter indentexpr gives no indent at all, so keep the filetype's own
+-- indent (for example Neovim's indent/cs.vim).
 vim.api.nvim_create_autocmd("FileType", {
   group = vim.api.nvim_create_augroup("TreesitterStart", { clear = true }),
   callback = function(args)
-    local ok = pcall(vim.treesitter.start, args.buf)
-    if ok then
+    if not pcall(vim.treesitter.start, args.buf) then
+      return
+    end
+    local lang = vim.treesitter.language.get_lang(vim.bo[args.buf].filetype)
+    if lang and vim.treesitter.query.get(lang, "indents") then
       vim.bo[args.buf].indentexpr =
         "v:lua.require'nvim-treesitter'.indentexpr()"
     end

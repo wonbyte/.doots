@@ -611,7 +611,16 @@ end
 local ok, plugs = pcall(vim.pack.get, { "nvim-lspconfig" }, { info = false })
 local roslyn_path = ok and plugs[1] and (plugs[1].path .. "/lsp/roslyn_ls.lua")
 if roslyn_path and vim.uv.fs_stat(roslyn_path) then
-  servers.roslyn_ls = dofile(roslyn_path)
+  -- Let Roslyn watch files itself instead of asking Neovim to (the "*"
+  -- config at the top turns client-side watching on). Roslyn also asks for
+  -- /usr/share/dotnet/packs, which does not exist with Ubuntu's .NET
+  -- package (it lives in /usr/lib/dotnet), and Neovim then shows a watch
+  -- error at every server start. Roslyn still picks up new files on disk.
+  servers.roslyn_ls = vim.tbl_deep_extend("force", dofile(roslyn_path), {
+    capabilities = {
+      workspace = { didChangeWatchedFiles = { dynamicRegistration = false } },
+    },
+  })
   -- Drop nvim-lspconfig's before_init. It only runs
   -- `roslyn-language-server --version` to warn about servers older than
   -- 5.8.0 (no --autoLoadProjects). Mason installs a newer one, so the check
