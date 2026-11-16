@@ -188,6 +188,15 @@ local servers = {
     cmd = { "lemminx" },
     filetypes = { "xml", "xsd", "xslt", "svg" },
     root_markers = { ".git" },
+    -- Make the server announce formatting at start, not a moment later.
+    -- With the late (dynamic) announcement, a save in the first second
+    -- after opening a file was not formatted.
+    capabilities = {
+      textDocument = {
+        formatting = { dynamicRegistration = false },
+        rangeFormatting = { dynamicRegistration = false },
+      },
+    },
     settings = {
       xml = {
         format = {
@@ -230,6 +239,10 @@ local servers = {
         -- Pass --all-features to cargo. (The old key cargo.allFeatures
         -- still works, but only through a compatibility shim.)
         cargo = { features = "all" },
+        -- The server watches files itself. With Neovim watching (the "*"
+        -- config at the top), build churn in target/ now and then gave an
+        -- "inotify: Couldn't watch new directory" error.
+        files = { watcher = "server" },
         -- checkOnSave is on by default; run clippy instead of cargo check.
         check = { command = "clippy" },
         completion = { callable = { snippets = "add_parentheses" } },
