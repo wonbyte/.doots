@@ -31,7 +31,11 @@ require("conform").setup({
   -- unformatted. If some external watcher (a test runner on save) reacts
   -- to that intermediate write, switch back to format_on_save -- that is
   -- the one real downside of this mode.
-  format_after_save = { timeout_ms = 1500 },
+  --
+  -- The empty table turns the mode on; the options come from
+  -- default_format_opts above. No timeout_ms here: conform's docs say it has
+  -- no effect on async formatting.
+  format_after_save = {},
 })
 
 -- Format buffer. <leader>cf sits in the same "code" namespace as <leader>ca

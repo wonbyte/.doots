@@ -65,9 +65,10 @@ local servers = {
     },
   },
   -- Java (Mason package "jdtls"; Mason puts its wrapper script on PATH).
-  -- Needs a Java 21+ runtime on PATH or in JAVA_HOME, and python3 (the
-  -- wrapper is a Python script). nvim-jdtls is pcall-guarded: a missing
-  -- plugin means no jdt:// support, not a crash.
+  -- Needs a Java 25+ runtime on PATH or in JAVA_HOME (jdtls 1.63 quits
+  -- with exit code 13 on older ones), and Python 3.9+ (the wrapper is a
+  -- Python script). nvim-jdtls is pcall-guarded: a missing plugin means no
+  -- jdt:// support, not a crash.
   jdtls = {
     cmd = function(dispatchers, config)
       local root = config.root_dir or vim.uv.cwd()
@@ -192,6 +193,10 @@ local servers = {
         format = {
           enabled = true,
           splitAttributes = "preserve",
+          -- Must be sent: the docs give true as the default, but that is
+          -- the VS Code extension's default. Without it the server joins
+          -- attributes that were on separate lines.
+          preserveAttributeLineBreaks = true,
           maxLineWidth = 280,
         },
       },
@@ -222,7 +227,9 @@ local servers = {
     root_markers = { "Cargo.toml", "rust-project.json", ".git" },
     settings = {
       ["rust-analyzer"] = {
-        cargo = { allFeatures = true },
+        -- Pass --all-features to cargo. (The old key cargo.allFeatures
+        -- still works, but only through a compatibility shim.)
+        cargo = { features = "all" },
         -- checkOnSave is on by default; run clippy instead of cargo check.
         check = { command = "clippy" },
         completion = { callable = { snippets = "add_parentheses" } },
