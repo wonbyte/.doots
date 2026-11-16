@@ -45,7 +45,8 @@ local requires = {
 -- single .sln/.slnx at its root, the project list is usually lost and no
 -- project loads (so no cross-file navigation). Fixed in dotnet/roslyn
 -- commit c6cdf9f, first released in 5.13.0-1.26507.4. Remove this pin when
--- the Mason registry has that version or a newer one.
+-- the Mason registry has that version or a newer one. Until then the :Mason
+-- window offers the registry's OLDER version as an "update": do not take it.
 local versions = {
   ["roslyn-language-server"] = "5.13.0-1.26514.10",
 }
