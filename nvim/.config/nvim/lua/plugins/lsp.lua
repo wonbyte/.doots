@@ -646,6 +646,14 @@ if roslyn_path and vim.uv.fs_stat(roslyn_path) then
   -- 5.8.0 (no --autoLoadProjects). Mason installs a newer one, so the check
   -- always passes and just costs one extra .NET start per server start.
   servers.roslyn_ls.before_init = nil
+else
+  -- Say so instead of skipping in silence. Seen for real: vim.pack cloned
+  -- the plugin but never checked its files out, and C# was just missing.
+  vim.notify(
+    "lsp: C# (roslyn_ls) is off: nvim-lspconfig's lsp/roslyn_ls.lua was not"
+      .. " found. See :checkhealth vim.pack",
+    vim.log.levels.WARN
+  )
 end
 
 for server_name, server_config in pairs(servers) do
