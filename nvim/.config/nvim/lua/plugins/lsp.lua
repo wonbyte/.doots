@@ -589,7 +589,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- C# (Roslyn). The server needs a lot of custom client code, so use the
 -- maintained config from nvim-lspconfig instead of a copy. See init.lua for
 -- why the file is read from disk. No formatter is set in conform for C#, so
--- lsp_format = "fallback" hands formatting to Roslyn (.editorconfig).
+-- lsp_format = "fallback" hands formatting to Roslyn. It reads the C# style
+-- rules from .editorconfig; the indent width comes from the buffer's
+-- shiftwidth/expandtab (sent with the request), which Neovim's built-in
+-- EditorConfig support sets from indent_size.
 --
 -- A .NET SDK installed with dotnet-install.sh lives in ~/.dotnet, which is
 -- outside the default search path. Without DOTNET_ROOT the server's launcher

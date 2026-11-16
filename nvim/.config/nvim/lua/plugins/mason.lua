@@ -38,6 +38,18 @@ local requires = {
   ["roslyn-language-server"] = "dotnet",
 }
 
+-- Versions to install instead of the registry's default.
+--
+-- roslyn-language-server: the registry still has 5.12.0-1.26426.8, which
+-- has a bug in --autoLoadProjects. In a folder with .csproj files but no
+-- single .sln/.slnx at its root, the project list is usually lost and no
+-- project loads (so no cross-file navigation). Fixed in dotnet/roslyn
+-- commit c6cdf9f, first released in 5.13.0-1.26507.4. Remove this pin when
+-- the Mason registry has that version or a newer one.
+local versions = {
+  ["roslyn-language-server"] = "5.13.0-1.26514.10",
+}
+
 local registry = require("mason-registry")
 registry.refresh(function()
   for _, name in ipairs(ensure_installed) do
@@ -46,7 +58,7 @@ registry.refresh(function()
     local ok, pkg = pcall(registry.get_package, name)
     if can_install and ok and not pkg:is_installed() then
       vim.notify("mason: installing " .. name, vim.log.levels.INFO)
-      pkg:install()
+      pkg:install({ version = versions[name] })
     end
   end
 end)
