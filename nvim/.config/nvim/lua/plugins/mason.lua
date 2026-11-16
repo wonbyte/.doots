@@ -1,6 +1,21 @@
 -- setup() prepends Mason's bin dir to PATH and sets $MASON, so servers in
 -- plugins/lsp.lua can use plain executable names ("gopls", ...).
-require("mason").setup({})
+--
+-- The second registry is only used for "roslyn", the C# language server.
+-- One person (GitHub: Crashdummyy) runs it; it is not Microsoft's or
+-- Mason's. It is updated daily and follows the server build that VS Code's
+-- C# extension uses. It repackages Microsoft's files (checked for one build
+-- that Microsoft also put on nuget.org: every file was identical).
+-- Mason's own registry has the server too ("roslyn-language-server"), but
+-- months behind, and its current build often fails to load a project that
+-- has no solution file. The first registry wins for every package name
+-- that both have.
+require("mason").setup({
+  registries = {
+    "github:mason-org/mason-registry",
+    "github:Crashdummyy/mason-registry",
+  },
+})
 
 -- Mason packages to keep installed. mason.nvim has no ensure_installed
 -- option of its own, so this uses its registry API directly: refresh the
@@ -25,7 +40,7 @@ local ensure_installed = {
   "json-lsp", -- jsonls (vscode-json-language-server)
   "lemminx", -- lemminx
   "lua-language-server", -- lua_ls
-  "roslyn-language-server", -- roslyn_ls (C#)
+  "roslyn", -- roslyn_ls (C#; from the second registry above)
   "rust-analyzer", -- rust_analyzer
 
   -- Formatters (see conform.lua)
@@ -33,19 +48,11 @@ local ensure_installed = {
   "stylua", -- lua
 }
 
--- Tool Mason needs on PATH to install a package. A package is skipped while
--- its tool is missing, so Mason does not fail and retry on every start.
-local requires = {
-  ["roslyn-language-server"] = "dotnet",
-}
-
 local registry = require("mason-registry")
 registry.refresh(function()
   for _, name in ipairs(ensure_installed) do
-    local tool = requires[name]
-    local can_install = not tool or vim.fn.executable(tool) == 1
     local ok, pkg = pcall(registry.get_package, name)
-    if can_install and ok and not pkg:is_installed() then
+    if ok and not pkg:is_installed() then
       vim.notify("mason: installing " .. name, vim.log.levels.INFO)
       pkg:install()
     end
