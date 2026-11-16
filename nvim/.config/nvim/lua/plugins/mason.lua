@@ -16,6 +16,8 @@ require("mason").setup({})
 -- missing conform has nothing to run, so the whitespace-trim fallback in
 -- aucommands.lua quietly takes over instead of erroring. rustfmt is the
 -- exception -- it comes from rustup so it always matches the toolchain.
+-- prettier is not here either: it is installed per project with npm, and
+-- conform runs the copy in the project's node_modules.
 local ensure_installed = {
   -- Language servers
   "gopls", -- gopls
@@ -28,7 +30,6 @@ local ensure_installed = {
 
   -- Formatters (see conform.lua)
   "goimports", -- go
-  "prettier", -- web filetypes, json
   "stylua", -- lua
 }
 
