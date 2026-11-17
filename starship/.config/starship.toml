@@ -25,7 +25,7 @@ $character"""
 style = "blue"
 truncation_length = 4
 truncate_to_repo = false
-read_only = " "
+read_only = " 🔒"
 
 [character]
 success_symbol = "[❯](purple)"
