@@ -64,97 +64,6 @@ local servers = {
       },
     },
   },
-  -- Java (Mason package "jdtls"; Mason puts its wrapper script on PATH).
-  -- Needs a Java 25+ runtime on PATH or in JAVA_HOME (jdtls 1.63 quits
-  -- with exit code 13 on older ones), and Python 3.9+ (the wrapper is a
-  -- Python script). nvim-jdtls is pcall-guarded: a missing plugin means no
-  -- jdt:// support, not a crash.
-  jdtls = {
-    cmd = function(dispatchers, config)
-      local root = config.root_dir or vim.uv.cwd()
-      -- One workspace/index dir per project. Keyed by name + path hash so two
-      -- repos that are both called "api" don't share (and corrupt) an index.
-      -- If jdtls ever gets confused, deleting this dir is the reset button.
-      local data_dir = vim.fn.stdpath("cache")
-        .. "/jdtls/"
-        .. vim.fs.basename(root)
-        .. "-"
-        .. vim.fn.sha256(root):sub(1, 8)
-
-      local cmd = {
-        "jdtls",
-        -- The wrapper only forwards --jvm-arg= to the JVM; bare -Xmx is
-        -- ignored.
-        "--jvm-arg=-Xmx4G",
-        "--jvm-arg=-XX:+UseParallelGC",
-      }
-      -- Mason's jdtls package ships lombok.jar; harmless if a project
-      -- doesn't use Lombok.
-      -- $MASON is set by require("mason").setup() (plugins/mason.lua runs
-      -- before this file); the stdpath fallback is Mason's default root.
-      local mason_root = vim.env.MASON or (vim.fn.stdpath("data") .. "/mason")
-      local lombok = mason_root .. "/packages/jdtls/lombok.jar"
-      if vim.uv.fs_stat(lombok) then
-        table.insert(cmd, "--jvm-arg=-javaagent:" .. lombok)
-      end
-      vim.list_extend(cmd, { "-data", data_dir })
-
-      return vim.lsp.rpc.start(cmd, dispatchers, { cwd = root })
-    end,
-    filetypes = { "java" },
-    -- The first group is tried first: wrapper scripts / .git mark the OUTER
-    -- root of a multi-module Maven/Gradle build, so submodules share one
-    -- server. The second group is only used when none of those exist.
-    root_markers = {
-      { "mvnw", "gradlew", "settings.gradle", "settings.gradle.kts", ".git" },
-      { "pom.xml", "build.gradle", "build.gradle.kts", "build.xml" },
-    },
-    -- extendedClientCapabilities turns on classFileContentsSupport, which is
-    -- what makes gd into JDK/library classes return openable jdt:// URIs.
-    -- Set when jdtls starts (not at Neovim startup), so nvim-jdtls is only
-    -- loaded when you open a Java file.
-    before_init = function(params)
-      local ok, jdtls = pcall(require, "jdtls")
-      if ok then
-        params.initializationOptions = vim.tbl_extend(
-          "force",
-          params.initializationOptions or {},
-          { extendedClientCapabilities = jdtls.extendedClientCapabilities }
-        )
-      end
-    end,
-    settings = {
-      java = {
-        -- Keep .project/.classpath/.settings out of the repo.
-        import = { generatesMetadataFilesAtProjectRoot = false },
-        -- Re-import automatically when pom.xml / build.gradle change.
-        configuration = { updateBuildConfiguration = "automatic" },
-        eclipse = { downloadSources = true },
-        maven = { downloadSources = true },
-        -- Decompile classes that have no source jar.
-        contentProvider = { preferred = "fernflower" },
-        signatureHelp = { enabled = true },
-        -- Which hints the server sends; rendering is still gated by the
-        -- <leader>h toggle, same as tsgo/gopls.
-        inlayHints = { parameterNames = { enabled = "literals" } },
-        completion = {
-          favoriteStaticMembers = {
-            "org.junit.jupiter.api.Assertions.*",
-            "org.mockito.Mockito.*",
-            "org.mockito.ArgumentMatchers.*",
-            "java.util.Objects.requireNonNull",
-          },
-        },
-        -- Never collapse imports into wildcards.
-        sources = {
-          organizeImports = {
-            starThreshold = 9999,
-            staticStarThreshold = 9999,
-          },
-        },
-      },
-    },
-  },
   -- JSON (Mason package "json-lsp"; binary: vscode-json-language-server)
   jsonls = {
     cmd = { "vscode-json-language-server", "--stdio" },
@@ -477,57 +386,6 @@ local function on_lsp_attach(args)
       client.server_capabilities.documentRangeFormattingProvider = false
     end
 
-    -- Java-only refactors from nvim-jdtls. These are client-side commands the
-    -- native LSP client doesn't implement, so they come from the library.
-    -- No formatting override: Java isn't in conform's formatters_by_ft, so
-    -- lsp_format = "fallback" hands it to jdtls's Eclipse formatter, which
-    -- picks up shiftwidth/expandtab from the formatting request.
-    if client.name == "jdtls" then
-      -- Turn off jdtls semantic tokens. They are drawn ON TOP of
-      -- Tree-sitter, and after an edit jdtls can send tokens for the old
-      -- text. Those tokens then land on the wrong columns, so random words
-      -- inside a Javadoc get parameter (white) or enum-constant (purple)
-      -- colors. Tree-sitter already highlights Java fully, so nothing is
-      -- lost except a few extras (for example bold parameters).
-      -- vim.lsp.semantic_tokens.enable() is the 0.12 API; Neovim starts
-      -- tokens in a vim.schedule() after LspAttach, so this runs in time.
-      vim.lsp.semantic_tokens.enable(false, { client_id = client.id })
-      local ok, jdtls = pcall(require, "jdtls")
-      if ok then
-        local function map(mode, lhs, rhs, desc)
-          vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
-        end
-        map(
-          "n",
-          "<leader>co",
-          jdtls.organize_imports,
-          "[Java] Organize imports"
-        )
-        map(
-          "n",
-          "<leader>cv",
-          jdtls.extract_variable,
-          "[Java] Extract variable"
-        )
-        -- Visual maps press <Esc> first: nvim-jdtls reads the range from
-        -- the '< and '> marks, which Neovim only sets when visual mode
-        -- ends. A plain function callback would use the PREVIOUS
-        -- selection. (This matches the nvim-jdtls README.)
-        map(
-          "v",
-          "<leader>cv",
-          "<Esc><Cmd>lua require('jdtls').extract_variable({ visual = true })<CR>",
-          "[Java] Extract variable"
-        )
-        map(
-          "v",
-          "<leader>cm",
-          "<Esc><Cmd>lua require('jdtls').extract_method({ visual = true })<CR>",
-          "[Java] Extract method"
-        )
-      end
-    end
-
     -- Inlay hints are intentionally NOT auto-enabled here: they start off in
     -- every buffer. Toggle them on per buffer with <leader>h (see
     -- keymappings.lua). Servers still advertise support and send the hints;
@@ -567,8 +425,7 @@ local function on_lsp_attach(args)
     { "n", "<leader>D", vim.lsp.buf.type_definition, "[LSP] Type definition" },
     { "n", "<leader>rn", vim.lsp.buf.rename, "[LSP] Rename symbol" },
     -- Run the code lens on this line (replaces the grx default, which the
-    -- nowait "gr" below makes unreachable). gopls offers lenses; jdtls only
-    -- does when java.referencesCodeLens / implementationCodeLens are on.
+    -- nowait "gr" below makes unreachable). gopls and roslyn_ls offer lenses.
     { "n", "<leader>cl", vim.lsp.codelens.run, "[LSP] Run code lens" },
     {
       { "n", "v" },

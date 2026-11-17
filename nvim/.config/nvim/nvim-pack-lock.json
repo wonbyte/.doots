@@ -37,10 +37,6 @@
       "rev": "3172f40c16563db871a58f20d205c710ad782311",
       "src": "https://github.com/windwp/nvim-autopairs"
     },
-    "nvim-jdtls": {
-      "rev": "6e9d953f0b82bccdb834cfde0e893f3119c22592",
-      "src": "https://github.com/mfussenegger/nvim-jdtls"
-    },
     "nvim-lspconfig": {
       "rev": "e1c6a5a45d95ad22cf55c874db2ff8ab969556f0",
       "src": "https://github.com/neovim/nvim-lspconfig"

@@ -84,7 +84,6 @@ autocmd("FileType", {
   pattern = {
     "cs",
     "go",
-    "java",
     "javascript",
     "javascriptreact",
     "lua",

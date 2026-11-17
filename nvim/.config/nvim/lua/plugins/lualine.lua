@@ -1,8 +1,8 @@
 -- Diagnostics have no inline display (virtual_text, virtual_lines and
 -- underline are all off in lsp.lua), so the statusline carries the counts.
--- vim.lsp.status() shows server progress messages (for example, jdtls
--- reports "Importing Maven project" while it indexes). It returns "" when
--- idle, so the component disappears on its own.
+-- vim.lsp.status() shows server progress messages (for example, while a
+-- server loads a project). It returns "" when idle, so the component
+-- disappears on its own.
 local function lsp_status()
   return vim.lsp.status()
 end
@@ -38,8 +38,8 @@ require("lualine").setup({
 
 -- lualine only redraws on its own timer and on cursor/mode events, so
 -- progress messages would lag. Refresh when they arrive, but at most once
--- per 100ms: jdtls can send many progress messages per second while it
--- imports a project. The refresh reads the newest status when it runs, so
+-- per 100ms: a server can send many progress messages per second while it
+-- loads a project. The refresh reads the newest status when it runs, so
 -- no message is shown late.
 local progress_timer = assert(vim.uv.new_timer())
 vim.api.nvim_create_autocmd("LspProgress", {

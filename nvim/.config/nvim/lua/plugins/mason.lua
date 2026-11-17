@@ -36,7 +36,6 @@ require("mason").setup({
 local ensure_installed = {
   -- Language servers
   "gopls", -- gopls
-  "jdtls", -- jdtls
   "json-lsp", -- jsonls (vscode-json-language-server)
   "lemminx", -- lemminx
   "lua-language-server", -- lua_ls

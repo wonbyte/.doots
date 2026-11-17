@@ -53,8 +53,6 @@ local ensure_installed = {
   "gitcommit",
   "go",
   "html",
-  "java",
-  "javadoc",
   "javascript",
   "jsdoc",
   "json",

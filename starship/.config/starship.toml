@@ -11,7 +11,6 @@ $hostname\
 $directory\
 $dotnet\
 $golang\
-$java\
 $nodejs\
 $rust\
 $lua\
@@ -44,15 +43,6 @@ format = "via [$symbol(🎯 $tfm )]($style)"
 symbol = "🐹 "
 detect_extensions = ["go"]
 detect_files = ["go.mod", "go.sum", "go.work"]
-detect_folders = []
-
-[java]
-symbol = "☕ "
-# Symbol only, no $version: reading the version starts a JVM on every
-# prompt (often 100-500 ms). Starship only runs it when $version is used.
-format = "via [$symbol]($style)"
-detect_extensions = ["java"]
-detect_files = ["pom.xml", "build.gradle", "build.gradle.kts", ".java-version", ".sdkmanrc"]
 detect_folders = []
 
 [nodejs]
