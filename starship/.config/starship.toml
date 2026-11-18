@@ -9,7 +9,6 @@ format = """
 $username\
 $hostname\
 $directory\
-$dotnet\
 $golang\
 $nodejs\
 $rust\
@@ -31,13 +30,6 @@ read_only = " 🔒"
 success_symbol = "[❯](purple)"
 error_symbol = "[❯](red)"
 vimcmd_symbol = "[❮](green)"
-
-[dotnet]
-symbol = ".NET "
-# No $version: even with the default heuristic, starship starts the dotnet
-# CLI to read it unless a global.json pins the SDK. $tfm (the target
-# framework, for example net10.0) is read from the project file.
-format = "via [$symbol(🎯 $tfm )]($style)"
 
 [golang]
 symbol = "🐹 "

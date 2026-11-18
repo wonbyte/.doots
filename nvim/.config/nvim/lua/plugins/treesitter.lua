@@ -21,9 +21,9 @@ local ts = require("nvim-treesitter")
 -- actually started, leaving the filetype's default indent in place otherwise.
 --
 -- It is also only set when the language has an "indents" query. Some
--- parsers ship none (c_sharp, dockerfile, vim, ...); for those the
--- Tree-sitter indentexpr gives no indent at all, so keep the filetype's own
--- indent (for example Neovim's indent/cs.vim).
+-- parsers ship none (dockerfile, vim, ...); for those the Tree-sitter
+-- indentexpr gives no indent at all, so keep the filetype's own indent
+-- (for example Neovim's indent/vim.vim).
 vim.api.nvim_create_autocmd("FileType", {
   group = vim.api.nvim_create_augroup("TreesitterStart", { clear = true }),
   callback = function(args)
@@ -45,7 +45,6 @@ vim.api.nvim_create_autocmd("FileType", {
 -- satisfied. No need to diff against get_installed() ourselves.
 local ensure_installed = {
   "bash",
-  "c_sharp",
   "css",
   "diff",
   "dockerfile",
@@ -74,7 +73,6 @@ local ensure_installed = {
   "typescript",
   "vim",
   "vimdoc",
-  "xml",
   "yaml",
 }
 

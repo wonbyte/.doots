@@ -1,21 +1,6 @@
 -- setup() prepends Mason's bin dir to PATH and sets $MASON, so servers in
 -- plugins/lsp.lua can use plain executable names ("gopls", ...).
---
--- The second registry is only used for "roslyn", the C# language server.
--- One person (GitHub: Crashdummyy) runs it; it is not Microsoft's or
--- Mason's. It is updated daily and follows the server build that VS Code's
--- C# extension uses. It repackages Microsoft's files (checked for one build
--- that Microsoft also put on nuget.org: every file was identical).
--- Mason's own registry has the server too ("roslyn-language-server"), but
--- months behind, and its current build often fails to load a project that
--- has no solution file. The first registry wins for every package name
--- that both have.
-require("mason").setup({
-  registries = {
-    "github:mason-org/mason-registry",
-    "github:Crashdummyy/mason-registry",
-  },
-})
+require("mason").setup()
 
 -- Mason packages to keep installed. mason.nvim has no ensure_installed
 -- option of its own, so this uses its registry API directly: refresh the
@@ -37,9 +22,7 @@ local ensure_installed = {
   -- Language servers
   "gopls", -- gopls
   "json-lsp", -- jsonls (vscode-json-language-server)
-  "lemminx", -- lemminx
   "lua-language-server", -- lua_ls
-  "roslyn", -- roslyn_ls (C#; from the second registry above)
   "rust-analyzer", -- rust_analyzer
 
   -- Formatters (see conform.lua)

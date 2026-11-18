@@ -91,35 +91,6 @@ local servers = {
       end
     end,
   },
-  -- XML / XSD / XSLT (Mason package "lemminx"). Keep attribute layout as
-  -- written and allow long lines instead of hard-wrapping at 80.
-  lemminx = {
-    cmd = { "lemminx" },
-    filetypes = { "xml", "xsd", "xslt", "svg" },
-    root_markers = { ".git" },
-    -- Make the server announce formatting at start, not a moment later.
-    -- With the late (dynamic) announcement, a save in the first second
-    -- after opening a file was not formatted.
-    capabilities = {
-      textDocument = {
-        formatting = { dynamicRegistration = false },
-        rangeFormatting = { dynamicRegistration = false },
-      },
-    },
-    settings = {
-      xml = {
-        format = {
-          enabled = true,
-          splitAttributes = "preserve",
-          -- Must be sent: the docs give true as the default, but that is
-          -- the VS Code extension's default. Without it the server joins
-          -- attributes that were on separate lines.
-          preserveAttributeLineBreaks = true,
-          maxLineWidth = 280,
-        },
-      },
-    },
-  },
   lua_ls = {
     cmd = { "lua-language-server" },
     filetypes = { "lua" },
@@ -425,7 +396,7 @@ local function on_lsp_attach(args)
     { "n", "<leader>D", vim.lsp.buf.type_definition, "[LSP] Type definition" },
     { "n", "<leader>rn", vim.lsp.buf.rename, "[LSP] Rename symbol" },
     -- Run the code lens on this line (replaces the grx default, which the
-    -- nowait "gr" below makes unreachable). gopls and roslyn_ls offer lenses.
+    -- nowait "gr" below makes unreachable). gopls offers lenses.
     { "n", "<leader>cl", vim.lsp.codelens.run, "[LSP] Run code lens" },
     {
       { "n", "v" },
@@ -462,56 +433,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
   group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
   callback = on_lsp_attach,
 })
-
--- C# (Roslyn). The server needs a lot of custom client code, so use the
--- maintained config from nvim-lspconfig instead of a copy. See init.lua for
--- why the file is read from disk. No formatter is set in conform for C#, so
--- lsp_format = "fallback" hands formatting to Roslyn. It reads the C# style
--- rules from .editorconfig; the indent width comes from the buffer's
--- shiftwidth/expandtab (sent with the request), which Neovim's built-in
--- EditorConfig support sets from indent_size.
---
--- A .NET SDK installed with dotnet-install.sh lives in ~/.dotnet, which is
--- outside the default search path. Without DOTNET_ROOT the server's launcher
--- cannot find the runtime and quits. config.fish sets it too; this covers
--- Neovim started from a shell (or a long-running tmux server) that does not
--- have it yet. A distro package registers its own location (in
--- /etc/dotnet/install_location) and needs nothing.
-local home_dotnet = vim.env.HOME .. "/.dotnet"
-if not vim.env.DOTNET_ROOT and vim.uv.fs_stat(home_dotnet .. "/dotnet") then
-  vim.env.DOTNET_ROOT = home_dotnet
-end
-
--- pcall: vim.pack.get() throws when the plugin is not installed (for
--- example a first start with no network). That must only cost C# support,
--- not stop every server below from being set up.
-local ok, plugs = pcall(vim.pack.get, { "nvim-lspconfig" }, { info = false })
-local roslyn_path = ok and plugs[1] and (plugs[1].path .. "/lsp/roslyn_ls.lua")
-if roslyn_path and vim.uv.fs_stat(roslyn_path) then
-  -- Let Roslyn watch files itself instead of asking Neovim to (the "*"
-  -- config at the top turns client-side watching on). Roslyn also asks for
-  -- /usr/share/dotnet/packs, which does not exist with Ubuntu's .NET
-  -- package (it lives in /usr/lib/dotnet), and Neovim then shows a watch
-  -- error at every server start. Roslyn still picks up new files on disk.
-  servers.roslyn_ls = vim.tbl_deep_extend("force", dofile(roslyn_path), {
-    capabilities = {
-      workspace = { didChangeWatchedFiles = { dynamicRegistration = false } },
-    },
-  })
-  -- Drop nvim-lspconfig's before_init. It only runs
-  -- `roslyn-language-server --version` to warn about servers older than
-  -- 5.8.0 (no --autoLoadProjects). Mason installs a newer one, so the check
-  -- always passes and just costs one extra .NET start per server start.
-  servers.roslyn_ls.before_init = nil
-else
-  -- Say so instead of skipping in silence. Seen for real: vim.pack cloned
-  -- the plugin but never checked its files out, and C# was just missing.
-  vim.notify(
-    "lsp: C# (roslyn_ls) is off: nvim-lspconfig's lsp/roslyn_ls.lua was not"
-      .. " found. See :checkhealth vim.pack",
-    vim.log.levels.WARN
-  )
-end
 
 for server_name, server_config in pairs(servers) do
   vim.lsp.config(server_name, server_config)

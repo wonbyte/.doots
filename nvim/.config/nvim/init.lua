@@ -119,14 +119,6 @@ vim.pack.add({
   "https://github.com/windwp/nvim-autopairs",
 })
 
--- nvim-lspconfig is installed only for its Roslyn (C#) config, which
--- plugins/lsp.lua reads from disk. The no-op `load` keeps the plugin off
--- runtimepath, so its defaults for other servers never mix with ours.
-vim.pack.add(
-  { "https://github.com/neovim/nvim-lspconfig" },
-  { load = function() end }
-)
-
 -- ============================================================================
 -- Plugin setup. lua/plugins/init.lua requires each plugins/*.lua file in
 -- order; each one configures its plugin at require time.
