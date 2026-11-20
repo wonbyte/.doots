@@ -15,11 +15,24 @@ end
 --   left side:   a notch, the text, a point, with a thin gap in the bar
 --                color between two blocks (like the tmux window list)
 --   right side:  one connected chain with no gaps (like the right end of
---                the tmux bar): a point, then the items with a thin arrow
---                between them, then the brown end block
+--                the tmux bar). Each item is one shade lighter than the
+--                one before it, so the solid arrow between two items
+--                shows, and the chain blends into the brown end block
 local RIGHT_ARROW = "\u{E0B0}"
 local LEFT_ARROW = "\u{E0B2}"
-local LEFT_ARROW_THIN = "\u{E0B3}"
+
+-- The chain on the right has at most this many items before the end block.
+local CHAIN_MAX = 4
+
+-- Mixes two "#RRGGBB" colors: t = 0 gives a, t = 1 gives b.
+local function mix(a, b, t)
+  local function channel(i)
+    local x = tonumber(a:sub(i, i + 1), 16)
+    local y = tonumber(b:sub(i, i + 1), 16)
+    return math.floor(x + (y - x) * t + 0.5)
+  end
+  return ("#%02X%02X%02X"):format(channel(2), channel(4), channel(6))
+end
 
 local function set_block_hl()
   local gray = require("melange/palettes/" .. vim.o.background).a
@@ -29,8 +42,24 @@ local function set_block_hl()
   -- The point: block color on the bar. The notch: bar color on the block.
   hl(0, "LualineBlockPoint", { fg = gray.sel, bg = gray.float })
   hl(0, "LualineBlockNotch", { fg = gray.float, bg = gray.sel })
-  -- Right side only: the arrows inside the chain, and its end block.
-  hl(0, "LualineBlockJoin", { fg = gray.ui, bg = gray.sel })
+
+  -- Right side. Item i has shade i: from the block color (i = 1) to half
+  -- way to the end block's brown (i = CHAIN_MAX). Only half way, so the
+  -- light text stays easy to read on every shade.
+  --   LualineChain<i>       the text of item i
+  --   LualineChainArrow<i>  the arrow in front of item i: its shade on the
+  --                         shade before it (on the bar for i = 1)
+  --   LualineChainEnd<i>    the arrow into the end block when item i is
+  --                         the last one (i = 0: no items at all)
+  local before = gray.float
+  hl(0, "LualineChainEnd0", { fg = gray.ui, bg = before })
+  for i = 1, CHAIN_MAX do
+    local shade = mix(gray.sel, gray.ui, (i - 1) / (CHAIN_MAX - 1) / 2)
+    hl(0, "LualineChain" .. i, { fg = gray.com, bg = shade })
+    hl(0, "LualineChainArrow" .. i, { fg = shade, bg = before })
+    hl(0, "LualineChainEnd" .. i, { fg = gray.ui, bg = shade })
+    before = shade
+  end
   hl(0, "LualineBlockEnd", { fg = gray.bg, bg = gray.ui, bold = true })
 end
 set_block_hl()
@@ -67,14 +96,13 @@ local function left_block(body_hl)
   end
 end
 
--- Right side. The first item that has text opens the chain with a point;
--- each later one joins it with a thin arrow. Some items can be empty (a
--- new buffer has no encoding), so "first" is tracked for each redraw:
--- chain_start runs before the items and sets the flag again.
-local chain_open = false
+-- Right side. Some items can be empty (a new buffer has no encoding), so
+-- the position in the chain is counted for each redraw: chain_start runs
+-- before the items and sets the count to zero again.
+local chain_len = 0
 
 local function chain_start()
-  chain_open = false
+  chain_len = 0
   return ""
 end
 
@@ -82,15 +110,26 @@ local function chain_item(text)
   if text == "" then
     return ""
   end
-  local lead = chain_open and ("%#LualineBlockJoin#" .. LEFT_ARROW_THIN)
-    or (BAR .. "%(%)%#LualineBlockPoint#" .. LEFT_ARROW)
-  chain_open = true
-  return lead .. "%#LualineBlock# " .. text .. " "
+  chain_len = math.min(chain_len + 1, CHAIN_MAX)
+  -- The first arrow stands on the bar, so tell lualine (see BAR above).
+  local lead = chain_len == 1 and (BAR .. "%(%)") or ""
+  return lead
+    .. "%#LualineChainArrow"
+    .. chain_len
+    .. "#"
+    .. LEFT_ARROW
+    .. "%#LualineChain"
+    .. chain_len
+    .. "# "
+    .. text
+    .. " "
 end
 
 -- The last item: a solid arrow into the brown block.
 local function chain_end(text)
-  return "%#LualineBlockJoin#"
+  return "%#LualineChainEnd"
+    .. chain_len
+    .. "#"
     .. LEFT_ARROW
     .. "%#LualineBlockEnd# "
     .. text
