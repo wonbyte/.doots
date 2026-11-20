@@ -17,6 +17,9 @@ require("lualine").setup({
   sections = {
     lualine_a = { { "mode" } },
     lualine_b = { "filename", "branch" },
+    -- Empty on purpose: lualine's default here is "filename", which would
+    -- show the name a second time.
+    lualine_c = {},
     -- Setting lualine_x replaces its defaults, so encoding, fileformat and
     -- filetype are listed explicitly to keep them.
     lualine_x = {
@@ -31,6 +34,9 @@ require("lualine").setup({
   },
   inactive_sections = {
     lualine_a = { "filename" },
+    -- Empty for the same reason: the defaults are "filename" and "location".
+    lualine_c = {},
+    lualine_x = {},
     lualine_z = { "location" },
   },
   extensions = { "quickfix" },
