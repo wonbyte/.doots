@@ -12,7 +12,10 @@ require("lualine").setup({
     theme = "melange",
     icons_enabled = false,
     component_separators = { left = "", right = "" },
-    section_separators = { left = "", right = "" },
+    -- Powerline arrows between sections, the same two glyphs that the
+    -- tmux status bar uses (U+E0B0 and U+E0B2). They need a Nerd Font or a
+    -- Powerline font in the terminal.
+    section_separators = { left = "\u{E0B0}", right = "\u{E0B2}" },
   },
   sections = {
     lualine_a = { { "mode" } },
