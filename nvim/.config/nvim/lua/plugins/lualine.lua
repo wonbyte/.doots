@@ -7,51 +7,74 @@ local function lsp_status()
   return vim.lsp.status()
 end
 
--- The file name as a yellow arrow block, the same shape and colors as the
--- current window in the tmux status bar: a notch on the left, a point on
--- the right. lualine cannot draw the notch itself (its separators only
--- point out of a section), so this component writes its own highlights.
+-- Arrow blocks, the same look as the tmux status bar. lualine can only
+-- draw an arrow between two sections, so the blocks inside a section are
+-- made here: each one is wrapped in its own highlights and arrow glyphs.
 -- The colors come from the melange palette, so they follow the theme.
-local ARROW = "\u{E0B0}"
+--
+--   left side:   a notch, the text, a point      (like a tmux window)
+--   right side:  a point, the text, a notch      (the mirror image)
+--
+-- The notch of one block and the point of the next one leave a thin gap
+-- in the bar color, which is what separates the blocks.
+local RIGHT_ARROW = "\u{E0B0}"
+local LEFT_ARROW = "\u{E0B2}"
 
-local function set_file_arrow_hl()
-  local palette = require("melange/palettes/" .. vim.o.background)
-  local yellow, dark, bar = palette.b.yellow, palette.a.bg, palette.a.float
+local function set_block_hl()
+  local gray = require("melange/palettes/" .. vim.o.background).a
   local hl = vim.api.nvim_set_hl
-  hl(0, "LualineFileNotch", { fg = bar, bg = yellow })
-  hl(0, "LualineFileName", { fg = dark, bg = yellow, bold = true })
-  hl(0, "LualineFilePoint", { fg = yellow, bg = bar })
+  hl(0, "LualineBlock", { fg = gray.com, bg = gray.sel })
+  hl(0, "LualineBlockBold", { fg = gray.com, bg = gray.sel, bold = true })
+  -- The point: block color on the bar. The notch: bar color on the block.
+  hl(0, "LualineBlockPoint", { fg = gray.sel, bg = gray.float })
+  hl(0, "LualineBlockNotch", { fg = gray.float, bg = gray.sel })
 end
-set_file_arrow_hl()
+set_block_hl()
 -- :colorscheme clears custom groups, so set them again.
 vim.api.nvim_create_autocmd("ColorScheme", {
-  group = vim.api.nvim_create_augroup("LualineFileArrow", { clear = true }),
-  callback = set_file_arrow_hl,
+  group = vim.api.nvim_create_augroup("LualineBlocks", { clear = true }),
+  callback = set_block_hl,
 })
 
-local function file_arrow()
-  local name = vim.fn.expand("%:t")
-  if name == "" then
-    name = "[No Name]"
+-- lualine colors the arrow of a neighbor section from the nearest
+-- highlight in this text, and that arrow must end on the bar color. So
+-- each block starts and ends with lualine_c_normal (the bar). The "%(%)"
+-- (an empty statusline group, zero width) keeps it apart from the next
+-- group; lualine reads the LAST group when several stand directly together.
+local BAR = "%#lualine_c_normal#"
+
+-- Used as a component's `fmt`: gets the component's text, returns the
+-- block. An empty text gives no block.
+local function left_block(body_hl)
+  return function(text)
+    if text == "" then
+      return ""
+    end
+    return BAR
+      .. "%(%)%#LualineBlockNotch#"
+      .. RIGHT_ARROW
+      .. "%#"
+      .. body_hl
+      .. "# "
+      .. text
+      .. " %#LualineBlockPoint#"
+      .. RIGHT_ARROW
+      .. BAR
   end
-  if vim.bo.modified then
-    name = name .. " [+]"
-  elseif vim.bo.readonly or not vim.bo.modifiable then
-    name = name .. " [-]"
+end
+
+local function right_block(text)
+  if text == "" then
+    return ""
   end
-  -- "%" starts a statusline item, so a literal one must be doubled.
-  name = name:gsub("%%", "%%%%")
-  -- The leading lualine_c_normal (the bar color) is for lualine: it reads
-  -- the first highlight of the next component to color the mode block's
-  -- arrow, and that arrow must end on the bar, not on yellow. The "%<"
-  -- (a zero-width statusline item) keeps the two groups apart; lualine
-  -- reads the LAST group when several stand directly together.
-  return "%#lualine_c_normal#%<%#LualineFileNotch#"
-    .. ARROW
-    .. "%#LualineFileName# "
-    .. name
-    .. " %#LualineFilePoint#"
-    .. ARROW
+  return BAR
+    .. "%(%)%#LualineBlockPoint#"
+    .. LEFT_ARROW
+    .. "%#LualineBlock# "
+    .. text
+    .. " %#LualineBlockNotch#"
+    .. LEFT_ARROW
+    .. BAR
 end
 
 require("lualine").setup({
@@ -62,24 +85,28 @@ require("lualine").setup({
     -- Powerline arrows between sections, the same two glyphs that the
     -- tmux status bar uses (U+E0B0 and U+E0B2). They need a Nerd Font or a
     -- Powerline font in the terminal.
-    section_separators = { left = ARROW, right = "\u{E0B2}" },
+    section_separators = { left = RIGHT_ARROW, right = LEFT_ARROW },
   },
   sections = {
     lualine_a = { { "mode" } },
-    -- Empty on purpose, so the mode block's arrow ends on the bar color
-    -- and the file block's notch starts from it (as in tmux).
-    lualine_b = {},
-    -- This also replaces lualine's default here ("filename"), which would
+    -- padding = 0: the blocks bring their own spaces, and they must touch
+    -- for the gap between them to look right. They are in section b, not
+    -- c, because a narrow window cuts section c first.
+    lualine_b = {
+      { "filename", fmt = left_block("LualineBlockBold"), padding = 0 },
+      { "branch", fmt = left_block("LualineBlock"), padding = 0 },
+    },
+    -- Empty on purpose: lualine's default here is "filename", which would
     -- show the name a second time.
-    lualine_c = { { file_arrow, padding = 0 }, "branch" },
+    lualine_c = {},
     -- Setting lualine_x replaces its defaults, so encoding, fileformat and
     -- filetype are listed explicitly to keep them.
     lualine_x = {
       "diagnostics",
       lsp_status,
-      "encoding",
-      "fileformat",
-      "filetype",
+      { "encoding", fmt = right_block, padding = 0 },
+      { "fileformat", fmt = right_block, padding = 0 },
+      { "filetype", fmt = right_block, padding = 0 },
     },
     -- The same two blocks as the right end of the tmux bar: a dark block
     -- with light text, then a brown block with dark bold text. A function,
