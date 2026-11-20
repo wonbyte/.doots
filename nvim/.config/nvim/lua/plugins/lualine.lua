@@ -43,9 +43,10 @@ local function set_block_hl()
   hl(0, "LualineBlockPoint", { fg = gray.sel, bg = gray.float })
   hl(0, "LualineBlockNotch", { fg = gray.float, bg = gray.sel })
 
-  -- Right side. Item i has shade i: from the block color (i = 1) to half
-  -- way to the end block's brown (i = CHAIN_MAX). Only half way, so the
-  -- light text stays easy to read on every shade.
+  -- Right side. Item i has shade i, in even steps from the background
+  -- color (i = 1, a little darker than the bar) to the end block's brown.
+  -- The steps are large on purpose, so each arrow shows clearly. The text
+  -- gets lighter with the shade, so it stays easy to read on all of them.
   --   LualineChain<i>       the text of item i
   --   LualineChainArrow<i>  the arrow in front of item i: its shade on the
   --                         shade before it (on the bar for i = 1)
@@ -54,8 +55,9 @@ local function set_block_hl()
   local before = gray.float
   hl(0, "LualineChainEnd0", { fg = gray.ui, bg = before })
   for i = 1, CHAIN_MAX do
-    local shade = mix(gray.sel, gray.ui, (i - 1) / (CHAIN_MAX - 1) / 2)
-    hl(0, "LualineChain" .. i, { fg = gray.com, bg = shade })
+    local shade = mix(gray.bg, gray.ui, (i - 1) / CHAIN_MAX)
+    local text = mix(gray.com, gray.fg, (i - 1) / (CHAIN_MAX - 1))
+    hl(0, "LualineChain" .. i, { fg = text, bg = shade })
     hl(0, "LualineChainArrow" .. i, { fg = shade, bg = before })
     hl(0, "LualineChainEnd" .. i, { fg = gray.ui, bg = shade })
     before = shade
