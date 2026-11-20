@@ -12,13 +12,14 @@ end
 -- made here: each one is wrapped in its own highlights and arrow glyphs.
 -- The colors come from the melange palette, so they follow the theme.
 --
---   left side:   a notch, the text, a point      (like a tmux window)
---   right side:  a point, the text, a notch      (the mirror image)
---
--- The notch of one block and the point of the next one leave a thin gap
--- in the bar color, which is what separates the blocks.
+--   left side:   a notch, the text, a point, with a thin gap in the bar
+--                color between two blocks (like the tmux window list)
+--   right side:  one connected chain with no gaps (like the right end of
+--                the tmux bar): a point, then the items with a thin arrow
+--                between them, then the brown end block
 local RIGHT_ARROW = "\u{E0B0}"
 local LEFT_ARROW = "\u{E0B2}"
+local LEFT_ARROW_THIN = "\u{E0B3}"
 
 local function set_block_hl()
   local gray = require("melange/palettes/" .. vim.o.background).a
@@ -28,6 +29,9 @@ local function set_block_hl()
   -- The point: block color on the bar. The notch: bar color on the block.
   hl(0, "LualineBlockPoint", { fg = gray.sel, bg = gray.float })
   hl(0, "LualineBlockNotch", { fg = gray.float, bg = gray.sel })
+  -- Right side only: the arrows inside the chain, and its end block.
+  hl(0, "LualineBlockJoin", { fg = gray.ui, bg = gray.sel })
+  hl(0, "LualineBlockEnd", { fg = gray.bg, bg = gray.ui, bold = true })
 end
 set_block_hl()
 -- :colorscheme clears custom groups, so set them again.
@@ -63,18 +67,34 @@ local function left_block(body_hl)
   end
 end
 
-local function right_block(text)
+-- Right side. The first item that has text opens the chain with a point;
+-- each later one joins it with a thin arrow. Some items can be empty (a
+-- new buffer has no encoding), so "first" is tracked for each redraw:
+-- chain_start runs before the items and sets the flag again.
+local chain_open = false
+
+local function chain_start()
+  chain_open = false
+  return ""
+end
+
+local function chain_item(text)
   if text == "" then
     return ""
   end
-  return BAR
-    .. "%(%)%#LualineBlockPoint#"
+  local lead = chain_open and ("%#LualineBlockJoin#" .. LEFT_ARROW_THIN)
+    or (BAR .. "%(%)%#LualineBlockPoint#" .. LEFT_ARROW)
+  chain_open = true
+  return lead .. "%#LualineBlock# " .. text .. " "
+end
+
+-- The last item: a solid arrow into the brown block.
+local function chain_end(text)
+  return "%#LualineBlockJoin#"
     .. LEFT_ARROW
-    .. "%#LualineBlock# "
+    .. "%#LualineBlockEnd# "
     .. text
-    .. " %#LualineBlockNotch#"
-    .. LEFT_ARROW
-    .. BAR
+    .. " "
 end
 
 require("lualine").setup({
@@ -100,35 +120,22 @@ require("lualine").setup({
     -- show the name a second time.
     lualine_c = {},
     -- Setting lualine_x replaces its defaults, so encoding, fileformat and
-    -- filetype are listed explicitly to keep them.
+    -- filetype are listed explicitly to keep them. Progress and location
+    -- are here too (not in y and z), so that the whole chain is drawn by
+    -- the functions above with no lualine separator in between.
     lualine_x = {
       "diagnostics",
       lsp_status,
-      { "encoding", fmt = right_block, padding = 0 },
-      { "fileformat", fmt = right_block, padding = 0 },
-      { "filetype", fmt = right_block, padding = 0 },
+      { chain_start, padding = 0 },
+      { "encoding", fmt = chain_item, padding = 0 },
+      { "fileformat", fmt = chain_item, padding = 0 },
+      { "filetype", fmt = chain_item, padding = 0 },
+      { "progress", fmt = chain_item, padding = 0 },
+      { "location", fmt = chain_end, padding = 0 },
     },
-    -- The same two blocks as the right end of the tmux bar: a dark block
-    -- with light text, then a brown block with dark bold text. A function,
-    -- so the colors are read again after a colorscheme or background change.
-    lualine_y = {
-      {
-        "progress",
-        color = function()
-          local gray = require("melange/palettes/" .. vim.o.background).a
-          return { fg = gray.com, bg = gray.sel }
-        end,
-      },
-    },
-    lualine_z = {
-      {
-        "location",
-        color = function()
-          local gray = require("melange/palettes/" .. vim.o.background).a
-          return { fg = gray.bg, bg = gray.ui, gui = "bold" }
-        end,
-      },
-    },
+    -- Empty on purpose: the defaults are "progress" and "location".
+    lualine_y = {},
+    lualine_z = {},
   },
   inactive_sections = {
     lualine_a = { "filename" },
