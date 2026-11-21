@@ -56,7 +56,6 @@ autocmd("FileType", {
 autocmd("FileType", {
   group = augroup("WebIndent", { clear = true }),
   pattern = {
-    "astro",
     "css",
     "html",
     "javascript",
