@@ -51,6 +51,7 @@ local ensure_installed = {
   "fish",
   "gitcommit",
   "go",
+  "graphql",
   "html",
   "javascript",
   "jsdoc",

@@ -5,6 +5,7 @@ require("conform").setup({
     -- goimports fixes imports AND formats in gofmt style, so a separate
     -- gofmt pass is redundant.
     go = { "goimports" },
+    graphql = { "prettier" },
     html = { "prettier" },
     javascript = { "prettier" },
     javascriptreact = { "prettier" },
