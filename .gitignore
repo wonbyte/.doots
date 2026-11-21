@@ -1,7 +1,12 @@
-# fish
+# fish. Stow links ~/.config/fish to this folder as a whole, so everything
+# that fish and its plugin manager (fisher) write there lands in the repo:
+# plugin files (for example nvm.fish) and fish's own state.
 fisher.fish
 fish_plugins
 fish_variables
+fish/.config/fish/completions/
+fish/.config/fish/conf.d/
+fish/.config/fish/functions/
 
 # Ignore everything inside .local/bin/
 bin/.local/bin/*

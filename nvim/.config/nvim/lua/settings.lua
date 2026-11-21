@@ -4,9 +4,10 @@ vim.g.netrw_banner = 0
 -- Faster UI updates (CursorHold, swap-write interval; also used by LSP)
 vim.o.updatetime = 300
 
--- Time to wait for a mapped key sequence. Every mapping in this config is
--- two keys after leader, so the 1000ms default is more waiting than needed
--- and 300 is enough that a hesitant second keystroke still lands.
+-- Time to wait for a mapped key sequence. No mapping in this config is
+-- longer than two keys after leader, so the 1000ms default is more waiting
+-- than needed, and 300 is enough that a hesitant second keystroke still
+-- lands.
 vim.o.timeoutlen = 300
 
 -- Relative line numbers, absolute number on the current line
